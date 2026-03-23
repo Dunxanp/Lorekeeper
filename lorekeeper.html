@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lorekeeper</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+html { font-size: 18px; scroll-behavior: smooth; }
+:root {
+  --bg:#0e0b07; --bg2:#161009; --stone:#1e1510; --stone2:#2a1d12;
+  --border:rgba(201,146,42,0.18); --border-h:rgba(201,146,42,0.45);
+  --gold:#c9922a; --gold-l:#f0c050; --gold-glow:rgba(240,192,80,0.15);
+  --parchment:#f0ddb0; --pdim:rgba(240,221,176,0.55); --pmuted:rgba(240,221,176,0.28);
+  --ink:#1a0f05; --red:#c0392b; --green:#27ae60;
+  --ease:cubic-bezier(0.22,0.61,0.36,1);
+  --rv:#e05c3a; --rm:#3b8fd4; --ra:#a855f7; --rf:#22c984;
+  --rw:#f0c050; --rl:#e88c4a; --rh:#e85d8a; --rrev:#78d490;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);background-image:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(201,146,42,0.06) 0%,transparent 70%),url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c9922a' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");min-height:100vh;font-family:'Crimson Pro',Georgia,serif;color:var(--parchment);overflow-x:hidden;}
+
+/* ── APP SHELL ── */
+.app{display:grid;grid-template-columns:310px 1fr;min-height:100vh;max-width:1700px;margin:0 auto;}
+@media(max-width:960px){.app{grid-template-columns:1fr;}}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  background:#1a1208;
+  background-image:
+    repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.008) 3px,rgba(255,255,255,0.008) 4px),
+    repeating-linear-gradient(-45deg,transparent,transparent 3px,rgba(255,255,255,0.008) 3px,rgba(255,255,255,0.008) 4px);
+  border-right:2px solid #3a2e1e;
+  padding:0;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+.sidebar::after{content:'';position:absolute;inset:5px;border:1px solid rgba(201,146,42,0.08);pointer-events:none;}
+.sidebar-inner{display:flex;flex-direction:column;gap:0;flex:1;padding:0 16px 24px;}
+
+/* Torch at top */
+.sidebar-torch{display:flex;justify-content:center;padding:18px 0 10px;position:relative;}
+.torch-body{width:8px;height:22px;background:linear-gradient(180deg,#f0c050,#c9922a,#8b4513);border-radius:3px 3px 1px 1px;position:relative;margin-top:16px;}
+.torch-flame{position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:16px;height:20px;background:radial-gradient(ellipse at 50% 80%,rgba(240,192,80,0.9),rgba(201,146,42,0.6) 40%,rgba(192,57,43,0.2) 80%,transparent);border-radius:50% 50% 30% 30%;animation:flicker 1.8s ease-in-out infinite;}
+.torch-glow{position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:40px;height:40px;background:radial-gradient(circle,rgba(240,192,80,0.15) 0%,transparent 70%);border-radius:50%;animation:glowPulse 1.8s ease-in-out infinite;}
+@keyframes flicker{0%,100%{transform:translateX(-50%) scaleY(1) scaleX(1);}25%{transform:translateX(-48%) scaleY(1.05) scaleX(0.95);}75%{transform:translateX(-52%) scaleY(0.96) scaleX(1.04);}}
+@keyframes glowPulse{0%,100%{opacity:0.7;}50%{opacity:1;}}
+
+.logo{text-align:center;padding:0 0 14px;border-bottom:none;}
+.logo-title{font-family:'Cinzel Decorative',serif;font-size:1.05rem;color:var(--gold-l);text-shadow:0 0 20px var(--gold),0 0 40px rgba(240,192,80,0.2);letter-spacing:3px;line-height:1.3;}
+.logo-sub{font-size:0.65rem;color:rgba(240,221,176,0.3);letter-spacing:3px;margin-top:4px;font-style:italic;}
+
+/* Rune divider */
+.rune-div{display:flex;align-items:center;gap:8px;margin:10px 0;}
+.rune-div::before,.rune-div::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,146,42,0.35),transparent);}
+.rune-div-gem{width:6px;height:6px;background:var(--gold);transform:rotate(45deg);flex-shrink:0;box-shadow:0 0 4px rgba(201,146,42,0.4);}
+
+.char-mini{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.avatar{width:74px;height:74px;border-radius:50%;border:2px solid var(--gold);background:radial-gradient(circle,#3d2a10,#1a0f05);display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;box-shadow:0 0 20px rgba(201,146,42,0.3),0 0 40px rgba(201,146,42,0.1);transition:all 0.3s;}
+.avatar:hover{box-shadow:0 0 30px rgba(201,146,42,0.6);transform:scale(1.05);}
+.char-name{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold-l);cursor:pointer;text-align:center;text-shadow:0 0 10px rgba(240,192,80,0.2);}
+.char-name:hover{text-decoration:underline;}
+.class-badge{font-size:0.68rem;letter-spacing:2px;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.25);border-radius:20px;padding:3px 13px;color:var(--gold);}
+.bar-wrap{width:100%;}
+.bar-lbl{display:flex;justify-content:space-between;font-size:0.73rem;color:var(--pmuted);margin-bottom:4px;}
+.bar-track{height:8px;background:rgba(0,0,0,0.5);border-radius:2px;border:1px solid rgba(201,146,42,0.12);overflow:hidden;}
+.bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold-l));box-shadow:0 0 8px rgba(201,146,42,0.4);transition:width 0.8s var(--ease);}
+
+/* Nav */
+.nav{display:flex;flex-direction:column;gap:2px;}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:4px;background:transparent;border:none;color:rgba(240,221,176,0.4);font-family:'Cinzel',serif;font-size:0.78rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;text-align:left;width:100%;}
+.nav-btn:hover{background:rgba(201,146,42,0.07);color:rgba(240,221,176,0.8);}
+.nav-btn.active{background:rgba(201,146,42,0.1);color:var(--gold-l);border:1px solid rgba(201,146,42,0.2);text-shadow:0 0 8px rgba(240,192,80,0.2);}
+.nav-icon{font-size:0.95rem;width:20px;text-align:center;flex-shrink:0;}
+
+/* Realm mini list */
+.realm-mini-list{display:flex;flex-direction:column;gap:7px;}
+.realm-mini{display:flex;align-items:center;gap:7px;font-size:0.75rem;}
+.realm-mini-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.realm-mini-name{color:rgba(240,221,176,0.35);flex:0 0 auto;width:86px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.realm-mini-bar{flex:1;height:3px;background:rgba(0,0,0,0.5);border-radius:2px;overflow:hidden;}
+.realm-mini-fill{height:100%;border-radius:2px;transition:width 0.6s var(--ease);}
+.realm-mini-lv{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.6);flex-shrink:0;}
+.realms-label{font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(201,146,42,0.35);letter-spacing:2px;margin-bottom:8px;}
+
+/* ── MAIN ── */
+.main{padding:32px 36px;display:flex;flex-direction:column;gap:28px;}
+@media(max-width:600px){.main{padding:16px;}}
+.page{display:none;} .page.active{display:flex;flex-direction:column;gap:22px;}
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.sec-title{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.sec-title::before,.sec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.sec-title::before{max-width:30px;}
+
+/* ── POLYMATH BANNER ── */
+.poly-banner{background:linear-gradient(135deg,rgba(201,146,42,0.08),rgba(201,146,42,0.03));border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;align-items:center;gap:14px;}
+.poly-icon{font-size:1.5rem;}
+.poly-desc{font-size:0.88rem;color:var(--pdim);flex:1;}
+.poly-title{font-family:'Cinzel',serif;font-size:0.75rem;color:var(--gold);letter-spacing:1px;margin-bottom:2px;}
+.poly-val{font-family:'Cinzel',serif;color:var(--gold-l);font-size:1.1rem;flex-shrink:0;}
+
+/* ── DASHBOARD REWARDS STRIP ── */
+.dash-rewards-strip{display:flex;flex-direction:column;gap:8px;}
+.dash-reward-row{background:var(--stone2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.dash-reward-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);}
+.dash-reward-row:hover{border-color:var(--border-h);transform:translateX(2px);}
+.dash-reward-row.ready-to-claim{border-color:rgba(240,192,80,0.5);animation:pulseGold 2s ease-in-out infinite;}
+@keyframes pulseGold{0%,100%{box-shadow:0 0 0 0 rgba(240,192,80,0.0);}50%{box-shadow:0 0 12px 2px rgba(240,192,80,0.2);}}
+.dash-rw-treat{font-size:0.9rem;color:var(--parchment);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dash-rw-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.dash-rw-pct{font-family:'Cinzel',serif;font-size:0.8rem;color:var(--gold);}
+.dash-rw-bar{width:120px;height:5px;background:rgba(0,0,0,0.4);border-radius:3px;overflow:hidden;}
+.dash-rw-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-l));border-radius:3px;transition:width 0.6s var(--ease);}
+.dash-rw-claim-badge{font-family:'Cinzel',serif;font-size:0.72rem;color:var(--gold-l);background:rgba(240,192,80,0.15);border:1px solid rgba(240,192,80,0.3);padding:2px 8px;border-radius:10px;}
+
+/* ── REALM CARDS ── */
+.realms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+@media(max-width:1100px){.realms-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:500px){.realms-grid{grid-template-columns:1fr;}}
+.realm-card{background:linear-gradient(135deg,var(--stone2),var(--stone));border:1px solid var(--border);border-radius:8px;padding:17px;position:relative;overflow:hidden;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;}
+.realm-card:hover{transform:translateY(-3px);border-color:var(--border-h);box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+.realm-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--rc);box-shadow:0 0 10px var(--rc);}
+.realm-icon{font-size:1.7rem;margin-bottom:7px;}
+.realm-name{font-family:'Cinzel',serif;font-size:0.83rem;letter-spacing:1px;color:var(--rc);text-transform:uppercase;}
+.realm-level{font-size:0.8rem;color:var(--pmuted);margin:3px 0 10px;}
+.realm-xp-track{height:5px;background:rgba(0,0,0,0.5);border-radius:3px;overflow:hidden;}
+.realm-xp-fill{height:100%;border-radius:3px;background:var(--rc);box-shadow:0 0 5px var(--rc);transition:width 0.8s var(--ease);}
+.realm-xp-label{font-size:0.74rem;color:var(--pmuted);margin-top:5px;}
+
+/* ── REALM POPUP ── */
+.realm-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:8000;padding:20px;}
+.realm-popup-overlay.show{display:flex;animation:fadeIn 0.25s ease;}
+.realm-popup{background:linear-gradient(135deg,var(--stone2),#0e0b07);border:2px solid var(--rc,var(--gold));border-radius:10px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;padding:32px;position:relative;box-shadow:0 0 60px rgba(0,0,0,0.6);}
+.realm-popup::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--rc,var(--gold));box-shadow:0 0 14px var(--rc,var(--gold));border-radius:10px 10px 0 0;}
+.popup-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--pmuted);font-size:1.3rem;cursor:pointer;transition:color 0.2s;line-height:1;}
+.popup-close:hover{color:var(--parchment);}
+.popup-realm-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.popup-realm-icon{font-size:2.5rem;}
+.popup-realm-name{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--rc,var(--gold-l));}
+.popup-realm-sub{font-size:0.9rem;color:var(--pdim);font-style:italic;margin-top:2px;}
+.popup-desc{font-size:0.95rem;color:var(--pdim);line-height:1.7;margin-bottom:18px;padding:12px;background:rgba(0,0,0,0.2);border-radius:6px;border-left:3px solid var(--rc,var(--gold));}
+.popup-section{margin-bottom:18px;}
+.popup-section-title{font-family:'Cinzel',serif;font-size:0.75rem;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.popup-activities{display:flex;flex-wrap:wrap;gap:6px;}
+.activity-tag{font-size:0.8rem;padding:4px 12px;border-radius:20px;border:1px solid var(--rc,var(--gold));color:var(--rc,var(--gold-l));background:rgba(0,0,0,0.2);}
+.popup-xp-bar-wrap{margin-bottom:6px;}
+.popup-xp-bar{height:10px;background:rgba(0,0,0,0.4);border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,0.05);}
+.popup-xp-fill{height:100%;border-radius:5px;background:var(--rc,var(--gold));box-shadow:0 0 8px var(--rc,var(--gold));transition:width 0.8s var(--ease);}
+.popup-xp-lbl{display:flex;justify-content:space-between;font-size:0.8rem;color:var(--pmuted);margin-top:4px;}
+.popup-items-list{display:flex;flex-direction:column;gap:6px;}
+.popup-item{font-size:0.88rem;color:var(--pdim);padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:4px;border-left:2px solid var(--rc,var(--gold));display:flex;align-items:center;gap:8px;}
+.popup-item-done{text-decoration:line-through;opacity:0.5;}
+.popup-sparkline{height:60px;margin-top:6px;}
+
+/* ── QUESTS ── */
+.quest-list{display:flex;flex-direction:column;gap:8px;}
+.quest-item{background:var(--stone2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;transition:all 0.2s;}
+.quest-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rc,var(--gold));box-shadow:0 0 6px var(--rc,var(--gold));}
+.quest-item:hover{border-color:var(--border-h);transform:translateX(2px);}
+.quest-item.done{opacity:0.5;}
+.quest-item.done .quest-name{text-decoration:line-through;}
+.quest-item.boss-item{border-color:rgba(192,57,43,0.4);background:linear-gradient(135deg,#1e0f0a,var(--stone2));}
+.check-box{width:24px;height:24px;border:2px solid var(--rc,var(--gold));border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;background:rgba(0,0,0,0.3);transition:all 0.2s;font-size:0.85rem;}
+.check-box:hover{background:rgba(201,146,42,0.15);}
+.check-box.checked{background:var(--rc,var(--gold));color:var(--ink);}
+.quest-body{flex:1;min-width:0;}
+.quest-name{font-size:1rem;color:var(--parchment);line-height:1.3;}
+.quest-tags{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center;}
+.qtag{font-size:0.72rem;padding:2px 9px;border-radius:10px;border:1px solid;font-family:'Cinzel',serif;}
+.quest-xp-lbl{font-size:0.85rem;color:var(--gold);font-weight:600;white-space:nowrap;}
+.boss-bar-wrap{margin-top:8px;}
+.boss-bar{height:8px;background:rgba(0,0,0,0.5);border-radius:4px;overflow:hidden;border:1px solid rgba(192,57,43,0.3);}
+.boss-fill{height:100%;background:linear-gradient(90deg,var(--red),#e74c3c);border-radius:4px;box-shadow:0 0 8px var(--red);transition:width 0.6s var(--ease);}
+.boss-label{font-size:0.75rem;color:rgba(192,57,43,0.7);margin-top:3px;}
+.del-btn{background:none;border:none;color:var(--pmuted);cursor:pointer;font-size:1rem;padding:2px 5px;transition:color 0.2s;flex-shrink:0;}
+.del-btn:hover{color:var(--red);}
+
+/* ── HABITS ── */
+.habit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:11px;}
+.habit-card{background:var(--stone2);border:1px solid var(--border);border-radius:6px;padding:15px;position:relative;overflow:hidden;}
+.habit-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rc,var(--gold));}
+.habit-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.habit-name{flex:1;font-size:1rem;color:var(--parchment);}
+.streak-days{display:flex;gap:4px;flex-wrap:wrap;}
+.sday{width:28px;height:28px;border-radius:4px;border:1px solid rgba(201,146,42,0.15);background:rgba(0,0,0,0.3);cursor:pointer;font-size:0.68rem;display:flex;align-items:center;justify-content:center;color:var(--pmuted);transition:all 0.15s;font-family:'Cinzel',serif;}
+.sday.hit{background:var(--rc,var(--gold));border-color:var(--rc,var(--gold));color:var(--ink);box-shadow:0 0 6px var(--rc,var(--gold));}
+.sday:hover:not(.hit){border-color:var(--border-h);background:rgba(201,146,42,0.1);}
+.habit-footer{display:flex;justify-content:space-between;margin-top:8px;align-items:center;}
+.streak-fire{font-size:0.83rem;color:var(--gold);font-family:'Cinzel',serif;}
+.habit-xp-note{font-size:0.78rem;color:var(--pmuted);}
+
+/* ── REWARDS ── */
+.rewards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:15px;}
+.reward-card{background:var(--stone2);border:1px solid var(--border);border-radius:8px;padding:19px;position:relative;overflow:hidden;transition:all 0.2s;}
+.reward-card.unlocked{border-color:rgba(240,192,80,0.5);box-shadow:0 0 20px rgba(240,192,80,0.1);}
+.reward-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--gold-l));}
+.reward-title{font-family:'Cinzel',serif;font-size:0.92rem;color:var(--gold-l);margin-bottom:4px;}
+.reward-treat{font-size:0.9rem;color:var(--parchment);font-style:italic;margin-bottom:10px;padding:9px;background:rgba(0,0,0,0.2);border-radius:4px;border-left:2px solid var(--gold);}
+.reward-bar-track{height:10px;background:rgba(0,0,0,0.4);border-radius:5px;overflow:hidden;border:1px solid rgba(201,146,42,0.15);}
+.reward-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--gold),var(--gold-l));box-shadow:0 0 8px var(--gold);transition:width 0.8s var(--ease);}
+.reward-count{display:flex;justify-content:space-between;font-size:0.8rem;color:var(--pmuted);margin-top:5px;}
+.reward-actions{display:flex;gap:8px;margin-top:11px;}
+.reward-increment{flex:1;padding:8px;border-radius:4px;border:1px solid var(--border);background:rgba(201,146,42,0.08);color:var(--gold);font-family:'Cinzel',serif;font-size:0.78rem;cursor:pointer;transition:all 0.2s;}
+.reward-increment:hover{background:rgba(201,146,42,0.18);border-color:var(--border-h);}
+.reward-claim{padding:8px 15px;border-radius:4px;border:1px solid var(--gold);background:linear-gradient(135deg,var(--gold),#a07020);color:var(--ink);font-family:'Cinzel',serif;font-size:0.78rem;cursor:pointer;font-weight:700;transition:all 0.2s;opacity:0.4;pointer-events:none;}
+.reward-claim.ready{opacity:1;pointer-events:all;box-shadow:0 0 12px rgba(201,146,42,0.3);}
+.reward-claimed-badge{display:inline-block;padding:4px 13px;border-radius:20px;background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.3);color:var(--green);font-size:0.78rem;font-family:'Cinzel',serif;}
+.reward-del{background:none;border:none;color:var(--pmuted);cursor:pointer;font-size:0.9rem;transition:color 0.2s;padding:2px;}
+.reward-del:hover{color:var(--red);}
+
+/* ── ACHIEVEMENTS ── */
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:12px;}
+.ach-card{background:var(--stone2);border:1px solid var(--border);border-radius:8px;padding:17px;text-align:center;transition:all 0.2s;position:relative;overflow:hidden;}
+.ach-card.earned{border-color:rgba(240,192,80,0.4);box-shadow:0 0 16px rgba(240,192,80,0.08);}
+.ach-card.locked{opacity:0.4;filter:grayscale(0.6);}
+.ach-icon{font-size:2.1rem;margin-bottom:7px;display:block;}
+.ach-name{font-family:'Cinzel',serif;font-size:0.83rem;color:var(--gold-l);margin-bottom:4px;}
+.ach-desc{font-size:0.8rem;color:var(--pmuted);font-style:italic;line-height:1.4;}
+.ach-stamp{position:absolute;top:8px;right:8px;font-size:0.62rem;color:var(--green);font-family:'Cinzel',serif;letter-spacing:1px;background:rgba(39,174,96,0.1);padding:2px 7px;border-radius:10px;border:1px solid rgba(39,174,96,0.2);}
+
+/* ── CHARTS ── */
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;}
+.chart-card{background:var(--stone2);border:1px solid var(--border);border-radius:8px;padding:22px;}
+.chart-title{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);letter-spacing:2px;margin-bottom:14px;}
+.chart-wrap{position:relative;height:210px;}
+.chart-controls{display:flex;gap:6px;flex-wrap:wrap;}
+.chart-btn{padding:5px 13px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--pmuted);font-family:'Cinzel',serif;font-size:0.74rem;cursor:pointer;transition:all 0.2s;}
+.chart-btn.active{background:rgba(201,146,42,0.15);color:var(--gold);border-color:var(--border-h);}
+.chart-btn:hover:not(.active){background:rgba(201,146,42,0.06);color:var(--parchment);}
+.data-io-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+
+/* ── JOURNAL / CHRONICLE ── */
+.journal-page{display:flex;flex-direction:column;gap:18px;}
+.journal-compose{background:linear-gradient(135deg,rgba(30,21,16,0.95),rgba(14,11,7,0.98));border:1px solid var(--border);border-radius:8px;padding:22px;position:relative;}
+.journal-compose::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-l));border-radius:8px 8px 0 0;}
+.journal-date-stamp{font-family:'Cinzel',serif;font-size:0.8rem;color:var(--gold);letter-spacing:1px;margin-bottom:12px;opacity:0.8;}
+.journal-textarea{width:100%;background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:6px;color:var(--parchment);font-family:'Crimson Pro',Georgia,serif;font-size:1rem;line-height:1.8;padding:14px;resize:vertical;min-height:140px;outline:none;transition:border-color 0.2s;}
+.journal-textarea:focus{border-color:var(--gold);}
+.journal-textarea::placeholder{color:var(--pmuted);font-style:italic;}
+.journal-prompts{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;}
+.prompt-chip{font-size:0.78rem;padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--pmuted);cursor:pointer;background:transparent;font-family:'Crimson Pro',serif;transition:all 0.2s;}
+.prompt-chip:hover{border-color:var(--gold);color:var(--gold);}
+.journal-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;}
+.journal-realm-sel{background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:4px;color:var(--parchment);font-family:'Crimson Pro',serif;font-size:0.9rem;padding:7px 12px;outline:none;}
+.journal-realm-sel:focus{border-color:var(--gold);}
+.journal-realm-sel option{background:#1a0f05;}
+.journal-xp-note{font-size:0.8rem;color:var(--pmuted);font-style:italic;}
+.journal-entries{display:flex;flex-direction:column;gap:14px;}
+.journal-entry{background:linear-gradient(135deg,rgba(30,21,16,0.9),rgba(14,11,7,0.95));border:1px solid var(--border);border-radius:8px;padding:22px;position:relative;}
+.journal-entry::before{content:'📜';position:absolute;top:16px;right:18px;font-size:1.2rem;opacity:0.2;}
+.entry-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.entry-date{font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold);letter-spacing:1px;}
+.entry-realm-tag{font-size:0.72rem;padding:2px 9px;border-radius:10px;border:1px solid;font-family:'Cinzel',serif;}
+.entry-text{font-size:0.96rem;color:var(--pdim);line-height:1.75;white-space:pre-wrap;}
+.entry-xp{font-size:0.78rem;color:var(--pmuted);margin-top:8px;font-style:italic;}
+.entry-del{background:none;border:none;color:var(--pmuted);cursor:pointer;font-size:0.85rem;transition:color 0.2s;padding:2px 4px;}
+.entry-del:hover{color:var(--red);}
+
+/* ── FORMS ── */
+.add-form{background:rgba(0,0,0,0.2);border:1px dashed rgba(201,146,42,0.25);border-radius:6px;padding:17px;display:none;margin-top:8px;animation:fadeIn 0.2s ease;}
+.add-form.open{display:block;}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.form-row:last-child{margin-bottom:0;}
+input[type=text],input[type=number],select{background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:4px;color:var(--parchment);font-family:'Crimson Pro',serif;font-size:1rem;padding:9px 13px;outline:none;transition:border-color 0.2s;}
+input[type=text]:focus,input[type=number]:focus,select:focus{border-color:var(--gold);}
+input[type=text]{flex:1;min-width:160px;}
+input[type=number]{width:100px;}
+select option{background:#1a0f05;}
+.btn{padding:9px 20px;border-radius:4px;font-family:'Cinzel',serif;font-size:0.8rem;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all 0.2s;border:1px solid var(--gold);}
+.btn-primary{background:linear-gradient(135deg,var(--gold),#a07020);color:var(--ink);}
+.btn-primary:hover{background:linear-gradient(135deg,var(--gold-l),var(--gold));box-shadow:0 0 14px rgba(201,146,42,0.4);}
+.btn-ghost{background:transparent;color:var(--gold);}
+.btn-ghost:hover{background:rgba(201,146,42,0.1);}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;}
+.empty{color:var(--pmuted);text-align:center;padding:30px;font-style:italic;font-size:0.93rem;}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:9000;padding:20px;}
+.modal-overlay.show{display:flex;animation:fadeIn 0.3s ease;}
+.modal{background:linear-gradient(135deg,var(--stone2),#0e0b07);border:2px solid var(--gold);border-radius:10px;padding:40px 48px;text-align:center;max-width:400px;width:100%;box-shadow:0 0 60px rgba(201,146,42,0.3);animation:scaleIn 0.4s var(--ease);}
+.modal-icon{font-size:3.2rem;margin-bottom:12px;filter:drop-shadow(0 0 16px gold);}
+.modal-title{font-family:'Cinzel Decorative',serif;font-size:1.5rem;color:var(--gold-l);margin-bottom:8px;text-shadow:0 0 20px var(--gold);}
+.modal-body{color:var(--pdim);font-style:italic;margin-bottom:20px;font-size:1rem;}
+
+/* ── UNDO TOAST ── */
+.undo-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,var(--stone2),var(--stone));border:1px solid var(--gold);border-radius:8px;padding:12px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:slideUp 0.3s var(--ease);min-width:280px;}
+.undo-msg{font-size:0.9rem;color:var(--parchment);flex:1;}
+.undo-timer{width:36px;height:36px;position:relative;flex-shrink:0;}
+.undo-timer svg{transform:rotate(-90deg);}
+.undo-timer circle{fill:none;stroke:rgba(201,146,42,0.2);stroke-width:3;}
+.undo-timer .timer-arc{stroke:var(--gold);stroke-width:3;stroke-dasharray:100;stroke-linecap:round;transition:stroke-dashoffset 0.1s linear;}
+.undo-btn{padding:6px 14px;border-radius:4px;border:1px solid var(--gold);background:rgba(201,146,42,0.15);color:var(--gold-l);font-family:'Cinzel',serif;font-size:0.75rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.undo-btn:hover{background:rgba(201,146,42,0.3);}
+.toast{position:fixed;bottom:28px;right:28px;z-index:9998;background:linear-gradient(135deg,var(--stone2),var(--stone));border:1px solid var(--gold);border-radius:6px;padding:14px 20px;font-family:'Cinzel',serif;font-size:0.88rem;color:var(--gold-l);box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:toastIn 0.3s var(--ease),toastOut 0.3s var(--ease) 2.5s forwards;max-width:340px;}
+
+/* ── XP FLASH ── */
+.xp-flash{position:fixed;pointer-events:none;font-family:'Cinzel',serif;font-size:1.15rem;color:var(--gold-l);font-weight:700;text-shadow:0 0 10px var(--gold);z-index:9999;animation:floatAway 1.4s ease-out forwards;}
+
+/* ── PARTICLES ── */
+.particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.particle{position:absolute;width:2px;height:2px;background:var(--gold-l);border-radius:50%;opacity:0;animation:floatUp linear infinite;}
+
+/* ── KEYFRAMES ── */
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes scaleIn{from{transform:scale(0.6);opacity:0;}to{transform:scale(1);opacity:1;}}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+@keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateY(10px);}}
+@keyframes floatAway{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-70px);}}
+@keyframes floatUp{0%{transform:translateY(100vh);opacity:0;}10%{opacity:0.5;}90%{opacity:0.15;}100%{transform:translateY(-10px) translateX(20px);opacity:0;}}
+
+::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="app">
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-torch">
+    <div class="torch-glow"></div>
+    <div class="torch-body"><div class="torch-flame"></div></div>
+  </div>
+  <div class="sidebar-inner">
+    <div class="logo">
+      <div class="logo-title">LOREKEEPER</div>
+      <div class="logo-sub">✦ your legend, recorded ✦</div>
+    </div>
+    <div class="rune-div"><div class="rune-div-gem"></div></div>
+    <div class="char-mini">
+      <div class="avatar" id="avatarBtn">🧙</div>
+      <div class="char-name" id="charNameEl">Brave Adventurer</div>
+      <div class="class-badge">⚡ POLYMATH</div>
+      <div class="bar-wrap">
+        <div class="bar-lbl"><span id="overallLvlLbl">Level 1</span><span id="overallXpLbl">0 / 200 XP</span></div>
+        <div class="bar-track"><div class="bar-fill" id="overallBar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="rune-div"><div class="rune-div-gem"></div></div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="goPage('dashboard',this)"><span class="nav-icon">🗺</span>Dashboard</button>
+      <button class="nav-btn" onclick="goPage('quests',this)"><span class="nav-icon">⚔️</span>Quests</button>
+      <button class="nav-btn" onclick="goPage('habits',this)"><span class="nav-icon">🕯</span>Rituals</button>
+      <button class="nav-btn" onclick="goPage('rewards',this)"><span class="nav-icon">🍺</span>Rewards</button>
+      <button class="nav-btn" onclick="goPage('chronicle',this)"><span class="nav-icon">📜</span>Chronicle</button>
+      <button class="nav-btn" onclick="goPage('achievements',this)"><span class="nav-icon">🏆</span>Achievements</button>
+      <button class="nav-btn" onclick="goPage('charts',this)"><span class="nav-icon">📊</span>Chronicles</button>
+    </nav>
+    <div class="rune-div"><div class="rune-div-gem"></div></div>
+    <div>
+      <div class="realms-label">REALMS</div>
+      <div class="realm-mini-list" id="realmMiniList"></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="poly-banner">
+      <span class="poly-icon">⚡</span>
+      <div style="flex:1">
+        <div class="poly-title">POLYMATH BONUS</div>
+        <div class="poly-desc" id="polymathDesc">Touch 4+ realms this week to activate your multiplier</div>
+      </div>
+      <div class="poly-val" id="polymathVal">×1.0</div>
+    </div>
+
+    <div>
+      <div class="sec-head"><div class="sec-title">Reward Vault</div><button class="btn btn-ghost" style="font-size:0.78rem" onclick="goPage('rewards',null)">View All →</button></div>
+      <div id="dashRewardStrip" style="margin-top:12px;"></div>
+    </div>
+
+    <div>
+      <div class="sec-head"><div class="sec-title">Realms of Power</div></div>
+      <div class="realms-grid" id="realmsGrid" style="margin-top:14px;"></div>
+    </div>
+
+    <div>
+      <div class="sec-head"><div class="sec-title">Active Quests</div><button class="btn btn-ghost" style="font-size:0.78rem" onclick="goPage('quests',null)">View All →</button></div>
+      <div class="quest-list" id="dashQuestList" style="margin-top:12px;"></div>
+    </div>
+
+    <div>
+      <div class="sec-head"><div class="sec-title">Today's Rituals</div></div>
+      <div class="habit-grid" id="dashHabitGrid" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- QUESTS -->
+  <div class="page" id="page-quests">
+    <div class="sec-head"><div class="sec-title">Quest Board</div><button class="btn btn-ghost" onclick="toggle('questForm')">+ New Quest</button></div>
+    <div class="add-form" id="questForm">
+      <div class="form-row">
+        <input type="text" id="qName" placeholder="Quest name…"/>
+        <select id="qRealm"><option value="">— Realm —</option></select>
+        <select id="qDiff">
+          <option value="50">Easy (50 XP)</option>
+          <option value="120" selected>Medium (120 XP)</option>
+          <option value="250">Hard (250 XP)</option>
+          <option value="500">Epic (500 XP)</option>
+        </select>
+        <select id="qType">
+          <option value="quest">Regular Quest</option>
+          <option value="boss">⚔ Boss Battle</option>
+        </select>
+      </div>
+      <div class="form-row" id="bossRow" style="display:none">
+        <input type="number" id="bossTarget" placeholder="Boss HP (steps)" min="2" max="50" value="10"/>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="toggle('questForm')">Cancel</button>
+        <button class="btn btn-primary" onclick="addQuest()">⚔ Accept Quest</button>
+      </div>
+    </div>
+    <div class="quest-list" id="questList"></div>
+  </div>
+
+  <!-- HABITS -->
+  <div class="page" id="page-habits">
+    <div class="sec-head"><div class="sec-title">Daily Rituals</div><button class="btn btn-ghost" onclick="toggle('habitForm')">+ New Ritual</button></div>
+    <div class="add-form" id="habitForm">
+      <div class="form-row">
+        <input type="text" id="hName" placeholder="Ritual name…"/>
+        <select id="hRealm"><option value="">— Realm —</option></select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="toggle('habitForm')">Cancel</button>
+        <button class="btn btn-primary" onclick="addHabit()">🕯 Bind Ritual</button>
+      </div>
+    </div>
+    <div class="habit-grid" id="habitGrid"></div>
+  </div>
+
+  <!-- REWARDS -->
+  <div class="page" id="page-rewards">
+    <div class="sec-head"><div class="sec-title">Reward Vault</div><button class="btn btn-ghost" onclick="toggle('rewardForm')">+ New Reward</button></div>
+    <div style="font-size:0.9rem;color:var(--pmuted);font-style:italic;margin-top:-8px;">Set a goal. Set a treat. Progress always earns XP — hit the target and claim your prize.</div>
+    <div class="add-form" id="rewardForm">
+      <div class="form-row"><input type="text" id="rTitle" placeholder="Goal name (e.g. Apply to 10 jobs)"/></div>
+      <div class="form-row"><input type="text" id="rTreat" placeholder="Your treat (e.g. Night out with friends 🍺)"/></div>
+      <div class="form-row">
+        <select id="rRealm"><option value="">— Realm —</option></select>
+        <input type="number" id="rTarget" placeholder="Target" min="1" value="10"/>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="toggle('rewardForm')">Cancel</button>
+        <button class="btn btn-primary" onclick="addReward()">🍺 Create Reward</button>
+      </div>
+    </div>
+    <div class="rewards-grid" id="rewardsGrid"></div>
+  </div>
+
+  <!-- CHRONICLE / JOURNAL -->
+  <div class="page" id="page-chronicle">
+    <div class="sec-head"><div class="sec-title">The Chronicle</div></div>
+    <div class="journal-compose">
+      <div class="journal-date-stamp" id="journalDateStamp"></div>
+      <textarea class="journal-textarea" id="journalText" placeholder="What deeds were done this day, Lorekeeper? Write freely…"></textarea>
+      <div class="journal-prompts">
+        <button class="prompt-chip" onclick="insertPrompt('⚔ Accomplished: ')">Accomplished</button>
+        <button class="prompt-chip" onclick="insertPrompt('📖 Wisdom earned: ')">Wisdom</button>
+        <button class="prompt-chip" onclick="insertPrompt('🔄 Next time I would: ')">Improve</button>
+        <button class="prompt-chip" onclick="insertPrompt('🙏 Grateful for: ')">Grateful</button>
+        <button class="prompt-chip" onclick="insertPrompt('💭 On my mind: ')">Thoughts</button>
+      </div>
+      <div class="journal-footer">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <select class="journal-realm-sel" id="journalRealm"><option value="">— Tag a Realm —</option></select>
+          <span class="journal-xp-note" id="journalXpNote">Words earn Lore XP on save</span>
+        </div>
+        <button class="btn btn-primary" onclick="saveJournalEntry()">🖋 Seal the Entry</button>
+      </div>
+    </div>
+    <div class="journal-entries" id="journalEntries"></div>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="page" id="page-achievements">
+    <div class="sec-head"><div class="sec-title">Hall of Achievements</div></div>
+    <div class="ach-grid" id="achievementsGrid"></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="page" id="page-charts">
+    <div class="sec-head"><div class="sec-title">The Chronicles</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div class="chart-controls">
+        <button class="chart-btn active" id="cw7"  onclick="setChartWindow(7,this)">7 days</button>
+        <button class="chart-btn" id="cw14" onclick="setChartWindow(14,this)">14 days</button>
+        <button class="chart-btn" id="cw30" onclick="setChartWindow(30,this)">30 days</button>
+        <button class="chart-btn" id="cw90" onclick="setChartWindow(90,this)">90 days</button>
+        <button class="chart-btn" id="cw0"  onclick="setChartWindow(0,this)">All time</button>
+      </div>
+      <div class="data-io-row">
+        <button class="btn btn-ghost" style="font-size:0.78rem" onclick="exportData()">⬇ Export Data</button>
+        <label class="btn btn-ghost" style="font-size:0.78rem;cursor:pointer">⬆ Import Data<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
+      </div>
+    </div>
+    <div class="charts-grid" id="chartsGrid"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- Level Up Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-icon">⚡</div>
+    <div class="modal-title" id="modalTitle">LEVEL UP!</div>
+    <div class="modal-body" id="modalBody">Your legend grows, Lorekeeper.</div>
+    <button class="btn btn-primary" onclick="closeModal()">Continue the Journey</button>
+  </div>
+</div>
+
+<!-- Realm Popup -->
+<div class="realm-popup-overlay" id="realmPopup" onclick="closeRealmPopup(event)">
+  <div class="realm-popup" id="realmPopupInner">
+    <button class="popup-close" onclick="closeRealmPopupDirect()">✕</button>
+    <div id="realmPopupContent"></div>
+  </div>
+</div>
+
+<script>
+// ── REALM DEFINITIONS ──────────────────────────────────────────────────
+const REALMS=[
+  {id:'vitality',  name:'Vitality',  icon:'💪',color:'var(--rv)',
+   desc:'The body is your first fortress. Vitality covers all things physical — movement, sleep, nutrition, and recovery. A healthy body fuels everything else.',
+   activities:['Workouts','Running','Cycling','Yoga','Stretching','Sleep tracking','Meal prep','Hydration','Steps','Sports']},
+  {id:'mastery',   name:'Mastery',   icon:'🧠',color:'var(--rm)',
+   desc:'Mastery is the forge of capability. Career growth, professional skills, certifications, and the hard work of becoming better at what you do.',
+   activities:['Job applications','Courses','Certifications','Work projects','Coding','Practice','Networking','Portfolio work','Interviews','Skills training']},
+  {id:'artistry',  name:'Artistry',  icon:'🎨',color:'var(--ra)',
+   desc:'Artistry is the realm of creation. Anything you make — art, music, writing, design, building — lives here. Expression for its own sake.',
+   activities:['Drawing','Writing','Music','Design','Photography','Video','Crafting','Building','Composing','Digital art']},
+  {id:'fellowship',name:'Fellowship',icon:'🤝',color:'var(--rf)',
+   desc:'Fellowship is the web of human connection. Friendships maintained, social courage exercised, relationships deepened. You are not meant to quest alone.',
+   activities:['Catching up with friends','Social events','Family time','Dating','Acts of kindness','Community','Messaging people','Meetups','Parties','Conversations']},
+  {id:'wealth',    name:'Wealth',    icon:'💰',color:'var(--rw)',
+   desc:'Wealth is the realm of financial power and career momentum. Job hunting, money management, investing, and building security for your future self.',
+   activities:['Job applications','Budgeting','Saving','Investing','Freelance work','Side projects','Financial planning','CV updating','Interviews','Salary negotiation']},
+  {id:'lore',      name:'Lore',      icon:'📖',color:'var(--rl)',
+   desc:'Lore is the pursuit of knowledge for pure curiosity. Reading, learning, studying, exploring ideas — the realm of the mind unbounded by career utility.',
+   activities:['Reading books','Podcasts','Documentaries','Research','Wikipedia spirals','Language learning','History','Science','Philosophy','Online courses']},
+  {id:'hearth',    name:'Hearth',    icon:'🏡',color:'var(--rh)',
+   desc:'Hearth is the realm of the home and daily life. Routines maintained, admin handled, living space cared for. The unglamorous work that keeps life running.',
+   activities:['Cleaning','Cooking','Meal planning','Admin','Bills','Organising','Errands','Home improvement','Laundry','Decluttering']},
+  {id:'reverie',   name:'Reverie',   icon:'🎲',color:'var(--rrev)',
+   desc:'Reverie is the realm of joyful play. Hobbies, games, exploration, and anything done purely for the love of it. Rest and stimulation in equal measure.',
+   activities:['Gaming','Hiking','Travel','Concerts','Cinema','Sports watching','Board games','Cooking for fun','Exploring','Collecting']},
+];
+
+// ── ACHIEVEMENTS ───────────────────────────────────────────────────────
+const ACH_DEFS=[
+  {id:'first_quest', name:'First Blood',      icon:'⚔️',desc:'Complete your first quest',          check:s=>s.quests.filter(q=>q.done).length>=1},
+  {id:'week_streak', name:'Oath Keeper',       icon:'🔥',desc:'7-day streak on any ritual',        check:s=>s.habits.some(h=>calcStreak(h)>=7)},
+  {id:'poly4',       name:'Renaissance Soul',  icon:'⚡',desc:'Touch 4 realms in one week',         check:s=>realmsTouched(s)>=4},
+  {id:'poly_all',    name:'True Polymath',     icon:'🌟',desc:'Touch all 8 realms in one week',    check:s=>realmsTouched(s)>=8},
+  {id:'boss_kill',   name:'Slayer',            icon:'💀',desc:'Defeat your first boss',             check:s=>s.quests.filter(q=>q.type==='boss'&&q.done).length>=1},
+  {id:'lvl5',        name:'Journeyman',        icon:'🎖', desc:'Reach overall Level 5',             check:s=>levelFromXp(totalXp(s))>=5},
+  {id:'lvl10',       name:'Champion',          icon:'🏆',desc:'Reach overall Level 10',            check:s=>levelFromXp(totalXp(s))>=10},
+  {id:'reward',      name:'Well Deserved',     icon:'🍺',desc:'Claim your first reward',           check:s=>s.rewards.some(r=>r.claimed)},
+  {id:'quests10',    name:'Veteran',           icon:'🛡', desc:'Complete 10 quests',               check:s=>s.quests.filter(q=>q.done).length>=10},
+  {id:'realm5',      name:'Realm Master',      icon:'💎',desc:'Reach Level 5 in any realm',       check:s=>Object.values(s.realms).some(r=>levelFromXp(r.xp)>=5)},
+  {id:'habits5',     name:'Creature of Habit', icon:'🌙',desc:'Log 5 different rituals',          check:s=>s.habits.length>=5},
+  {id:'epic',        name:'Legend',            icon:'🔮',desc:'Complete an Epic quest',           check:s=>s.quests.filter(q=>q.done&&q.xp>=500).length>=1},
+  {id:'chronicler',  name:'Chronicler',        icon:'📜',desc:'Write 5 journal entries',          check:s=>(s.journal||[]).length>=5},
+  {id:'sage',        name:'Sage',              icon:'🪄',desc:'Write 20 journal entries',         check:s=>(s.journal||[]).length>=20},
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────
+let S={name:'Brave Adventurer',avatar:'🧙',realms:{},quests:[],habits:[],rewards:[],earnedAch:[],xpLog:[],journal:[]};
+REALMS.forEach(r=>{S.realms[r.id]={xp:0};});
+function save(){try{localStorage.setItem('lq_poly',JSON.stringify(S));}catch(e){}}
+function load(){
+  try{const raw=localStorage.getItem('lq_poly');
+    if(raw){S={...S,...JSON.parse(raw)};REALMS.forEach(r=>{if(!S.realms[r.id])S.realms[r.id]={xp:0};});if(!S.journal)S.journal=[];if(!S.xpLog)S.xpLog=[];}
+  }catch(e){}
+}
+
+// ── MATH ───────────────────────────────────────────────────────────────
+function xpNeededForLevel(lvl){
+  if(lvl<=2)return 200;if(lvl<=5)return Math.round(200+(lvl-2)*120);
+  if(lvl<=10)return Math.round(560+(lvl-5)*300);if(lvl<=20)return Math.round(2060+(lvl-10)*600);
+  if(lvl<=35)return Math.round(8060+(lvl-20)*1200);return Math.round(26060+(lvl-35)*3000);
+}
+function xpThreshold(lvl){if(lvl<=1)return 0;let t=0;for(let i=2;i<=lvl;i++)t+=xpNeededForLevel(i);return t;}
+function levelFromXp(xp){let l=1;while(xp>=xpThreshold(l+1))l++;return l;}
+function xpInto(xp){return xp-xpThreshold(levelFromXp(xp));}
+function xpNeeded(xp){return xpNeededForLevel(levelFromXp(xp)+1);}
+function totalXp(s=S){return Object.values(s.realms).reduce((a,r)=>a+r.xp,0);}
+
+let chartWindow=14;
+
+// ── DATES ──────────────────────────────────────────────────────────────
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function last7Days(){const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);}return days;}
+function dayLetter(ds){return['S','M','T','W','T','F','S'][new Date(ds+'T12:00:00').getDay()];}
+function calcStreak(h){let s=0,d=new Date();while(true){const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;if(h.days&&h.days[ds]){s++;d.setDate(d.getDate()-1);}else break;}return s;}
+function medievalDate(){const d=new Date();const months=['January','February','March','April','May','June','July','August','September','October','November','December'];const ord=n=>{const s=['th','st','nd','rd'];const v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};const h=d.getHours();const period=h<12?'Morning':h<17?'Afternoon':h<21?'Evening':'Night';return `The ${ord(d.getDate())} of ${months[d.getMonth()]}, ${d.getFullYear()} · ${period}`;}
+
+// ── XP ─────────────────────────────────────────────────────────────────
+function realmsTouched(s=S){const days=last7Days();const t=new Set();s.habits.forEach(h=>{if(h.realmId&&days.some(d=>h.days&&h.days[d]))t.add(h.realmId);});s.quests.forEach(q=>{if(q.done&&q.realmId&&q.doneDate&&days.includes(q.doneDate))t.add(q.realmId);});return t.size;}
+function polymathMult(s=S){const t=realmsTouched(s);if(t>=8)return 2.0;if(t>=6)return 1.6;if(t>=4)return 1.3;if(t>=2)return 1.1;return 1.0;}
+function applyXp(realmId,baseXp,e){
+  const mult=polymathMult();const final=Math.round(baseXp*mult);
+  const prevLvl=levelFromXp(totalXp());
+  if(realmId)S.realms[realmId].xp+=final;else REALMS.forEach(r=>{S.realms[r.id].xp+=Math.round(final/REALMS.length);});
+  S.xpLog.push({date:todayStr(),realmId:realmId||'general',xp:final});
+  if(e)xpFlash(`+${final} XP${mult>1?' ⚡×'+mult.toFixed(1):''}`,e.clientX,e.clientY);
+  const newLvl=levelFromXp(totalXp());
+  if(newLvl>prevLvl)setTimeout(()=>showModal(`⚡ LEVEL ${newLvl}!`,`The legend deepens. A master of none — and keeper of all.`),400);
+  checkAchievements();save();
+}
+
+// ── UNDO SYSTEM ────────────────────────────────────────────────────────
+let undoTimer=null;let undoEl=null;
+function showUndo(msg,undoFn,durationMs=5000){
+  clearUndo();
+  undoEl=document.createElement('div');undoEl.className='undo-toast';
+  const circ=100;
+  undoEl.innerHTML=`<span class="undo-msg">${msg}</span>
+    <div class="undo-timer"><svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15"/><circle class="timer-arc" cx="18" cy="18" r="15" stroke-dashoffset="0"/></svg></div>
+    <button class="undo-btn" id="undoBtnEl">Undo</button>`;
+  document.body.appendChild(undoEl);
+  undoEl.querySelector('#undoBtnEl').addEventListener('click',()=>{clearUndo();undoFn();});
+  const arc=undoEl.querySelector('.timer-arc');const circumference=2*Math.PI*15;
+  arc.style.strokeDasharray=circumference;arc.style.strokeDashoffset=0;
+  const start=Date.now();
+  function tick(){const elapsed=Date.now()-start;const frac=Math.min(1,elapsed/durationMs);arc.style.strokeDashoffset=circumference*frac;if(frac<1)requestAnimationFrame(tick);}
+  requestAnimationFrame(tick);
+  undoTimer=setTimeout(()=>{undoEl&&undoEl.remove();undoEl=null;},durationMs);
+}
+function clearUndo(){if(undoTimer){clearTimeout(undoTimer);undoTimer=null;}if(undoEl){undoEl.remove();undoEl=null;}}
+
+// ── RENDER ─────────────────────────────────────────────────────────────
+function render(){renderSidebar();renderPolymath();renderRealms();renderDashRewards();renderDashQuests();renderDashHabits();renderQuests();renderHabits();renderRewards();renderAchievements();renderJournal();populateSelects();}
+
+function renderSidebar(){
+  document.getElementById('avatarBtn').textContent=S.avatar;
+  document.getElementById('charNameEl').textContent=S.name;
+  const tx=totalXp();const lvl=levelFromXp(tx);const into=xpInto(tx);const needed=xpNeeded(tx);
+  const pct=Math.min(100,(into/needed)*100);
+  document.getElementById('overallLvlLbl').textContent=`Level ${lvl}`;
+  document.getElementById('overallXpLbl').textContent=`${into.toLocaleString()} / ${needed.toLocaleString()} XP`;
+  document.getElementById('overallBar').style.width=pct+'%';
+  document.getElementById('realmMiniList').innerHTML=REALMS.map(r=>{
+    const rxp=S.realms[r.id]?.xp||0;const rl=levelFromXp(rxp);
+    const p=Math.min(100,(xpInto(rxp)/xpNeeded(rxp))*100);
+    return `<div class="realm-mini"><div class="realm-mini-dot" style="background:${r.color}"></div><span class="realm-mini-name">${r.icon} ${r.name}</span><div class="realm-mini-bar"><div class="realm-mini-fill" style="width:${p}%;background:${r.color}"></div></div><span class="realm-mini-lv">Lv${rl}</span></div>`;
+  }).join('');
+}
+
+function renderPolymath(){
+  const mult=polymathMult();const t=realmsTouched();
+  document.getElementById('polymathVal').textContent=`×${mult.toFixed(1)}`;
+  document.getElementById('polymathDesc').textContent=t>=8?'ALL 8 realms touched — maximum power unleashed!':t>=4?`${t} realms touched this week — Polymath bonus active!`:`Touch ${4-t} more realm${4-t!==1?'s':''} this week to activate Polymath bonus`;
+}
+
+function renderRealms(){
+  document.getElementById('realmsGrid').innerHTML=REALMS.map(r=>{
+    const rxp=S.realms[r.id]?.xp||0;const rl=levelFromXp(rxp);
+    const into=xpInto(rxp);const needed=xpNeeded(rxp);const pct=Math.min(100,(into/needed)*100);
+    return `<div class="realm-card" style="--rc:${r.color}" onclick="openRealmPopup('${r.id}')">
+      <div class="realm-icon">${r.icon}</div>
+      <div class="realm-name">${r.name}</div>
+      <div class="realm-level">Level ${rl} · ${rxp.toLocaleString()} XP</div>
+      <div class="realm-xp-track"><div class="realm-xp-fill" style="width:${pct}%"></div></div>
+      <div class="realm-xp-label">${into.toLocaleString()} / ${needed.toLocaleString()} to next level</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDashRewards(){
+  const el=document.getElementById('dashRewardStrip');
+  const active=S.rewards.filter(r=>!r.claimed);
+  if(!active.length){el.innerHTML=`<div class="empty" style="padding:14px">No active rewards — set yourself a goal and a treat!</div>`;return;}
+  el.innerHTML=active.map((rw,_i)=>{
+    const i=S.rewards.indexOf(rw);
+    const pct=Math.min(100,(rw.count/rw.target)*100);
+    const ready=rw.count>=rw.target;
+    return `<div class="dash-reward-row ${ready?'ready-to-claim':''}" onclick="goPage('rewards',null)">
+      <span style="font-size:1.1rem">🎁</span>
+      <span class="dash-rw-treat">${rw.treat}</span>
+      <div class="dash-rw-right">
+        ${ready?`<span class="dash-rw-claim-badge">✨ Ready to claim!</span>`:`<span class="dash-rw-pct">${Math.round(pct)}%</span>`}
+        <div class="dash-rw-bar"><div class="dash-rw-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderDashQuests(){
+  const el=document.getElementById('dashQuestList');
+  const active=S.quests.filter(q=>!q.done).slice(0,5);
+  if(!active.length){el.innerHTML=`<div class="empty">No active quests — add some on the Quest Board!</div>`;return;}
+  el.innerHTML=active.map(q=>questHTML(S.quests.indexOf(q),q)).join('');
+}
+
+function renderDashHabits(){
+  const el=document.getElementById('dashHabitGrid');
+  if(!S.habits.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1">No rituals bound yet!</div>`;return;}
+  el.innerHTML=S.habits.map((h,i)=>habitCardHTML(i,h)).join('');
+}
+
+function renderQuests(){
+  const el=document.getElementById('questList');
+  if(!S.quests.length){el.innerHTML=`<div class="empty">The quest board awaits your first mark.</div>`;return;}
+  el.innerHTML=S.quests.map((q,i)=>questHTML(i,q)).join('');
+}
+
+function questHTML(i,q){
+  const r=REALMS.find(r=>r.id===q.realmId);const color=r?.color||'var(--gold)';const isBoss=q.type==='boss';
+  const diff=q.xp<=50?'Easy':q.xp<=120?'Medium':q.xp<=250?'Hard':'Epic';
+  const bossBar=isBoss?`<div class="boss-bar-wrap"><div class="boss-bar"><div class="boss-fill" style="width:${Math.min(100,(q.bossHits||0)/q.bossTarget*100)}%"></div></div><div class="boss-label">${q.bossHits||0} / ${q.bossTarget} hits · ${q.bossTarget-(q.bossHits||0)} remaining</div></div>`:'';
+  return `<div class="quest-item ${q.done?'done':''} ${isBoss?'boss-item':''}" style="--rc:${color}">
+    <div class="check-box ${q.done?'checked':''}" onclick="toggleQuest(${i},event)">${q.done?'✓':isBoss?'⚔':''}</div>
+    <div class="quest-body">
+      <div class="quest-name">${isBoss?'⚔ BOSS: ':''}${q.name}</div>
+      <div class="quest-tags">
+        ${r?`<span class="qtag" style="border-color:${color};color:${color}">${r.icon} ${r.name}</span>`:''}
+        <span class="qtag" style="border-color:var(--border);color:var(--pmuted)">${diff}</span>
+        ${isBoss?`<span class="qtag" style="border-color:rgba(192,57,43,0.4);color:var(--red)">Boss</span>`:''}
+      </div>${bossBar}
+    </div>
+    <div class="quest-xp-lbl">+${q.xp} XP</div>
+    <button class="del-btn" onclick="delQuest(${i})">✕</button>
+  </div>`;
+}
+
+function renderHabits(){
+  const el=document.getElementById('habitGrid');
+  if(!S.habits.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1">No rituals bound yet. Add your first!</div>`;return;}
+  el.innerHTML=S.habits.map((h,i)=>habitCardHTML(i,h)).join('');
+}
+
+function habitCardHTML(i,h){
+  const r=REALMS.find(r=>r.id===h.realmId);const color=r?.color||'var(--gold)';
+  const days=last7Days();const streak=calcStreak(h);
+  const dots=days.map(d=>`<div class="sday ${h.days&&h.days[d]?'hit':''}" style="--rc:${color}" onclick="toggleHabitDay(${i},'${d}',event)">${dayLetter(d)}</div>`).join('');
+  return `<div class="habit-card" style="--rc:${color}">
+    <div class="habit-top"><span style="font-size:1.1rem">${r?.icon||'📌'}</span><div class="habit-name">${h.name}</div><button class="del-btn" onclick="delHabit(${i})">✕</button></div>
+    <div class="streak-days">${dots}</div>
+    <div class="habit-footer"><div class="streak-fire">🔥 ${streak} day streak</div><div class="habit-xp-note">+20 XP/day</div></div>
+  </div>`;
+}
+
+function renderRewards(){
+  const el=document.getElementById('rewardsGrid');
+  if(!S.rewards.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1">No rewards set — create a goal and a treat!</div>`;return;}
+  el.innerHTML=S.rewards.map((rw,i)=>{
+    const r=REALMS.find(r=>r.id===rw.realmId);const pct=Math.min(100,(rw.count/rw.target)*100);const ready=rw.count>=rw.target&&!rw.claimed;
+    return `<div class="reward-card ${ready?'unlocked':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div class="reward-title">${rw.title}</div><button class="reward-del" onclick="delReward(${i})">✕</button></div>
+      <div class="reward-treat">🎁 ${rw.treat}</div>
+      ${r?`<div style="font-size:0.75rem;color:${r.color};margin-bottom:8px">${r.icon} ${r.name}</div>`:''}
+      <div class="reward-bar-track"><div class="reward-bar-fill" style="width:${pct}%"></div></div>
+      <div class="reward-count"><span>${rw.count} / ${rw.target} completed</span><span>${Math.round(pct)}%</span></div>
+      <div class="reward-actions">
+        ${rw.claimed?`<span class="reward-claimed-badge">✓ Claimed — enjoy it!</span>`:`<button class="reward-increment" onclick="rewardTick(${i},event)" ${rw.count>=rw.target?"disabled style=\"opacity:0.35;cursor:not-allowed\"":""}>+ Log Progress</button><button class="reward-claim ${ready?'ready':''}" onclick="claimReward(${i})">🎉 Claim</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAchievements(){
+  document.getElementById('achievementsGrid').innerHTML=ACH_DEFS.map(a=>{
+    const earned=S.earnedAch&&S.earnedAch.includes(a.id);
+    return `<div class="ach-card ${earned?'earned':'locked'}">${earned?`<div class="ach-stamp">EARNED</div>`:''}<span class="ach-icon">${a.icon}</span><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>`;
+  }).join('');
+}
+
+function renderJournal(){
+  document.getElementById('journalDateStamp').textContent=medievalDate();
+  const el=document.getElementById('journalEntries');
+  if(!S.journal||!S.journal.length){el.innerHTML=`<div class="empty">The chronicle awaits your first words. Every entry is a testament to your legend.</div>`;return;}
+  el.innerHTML=[...S.journal].reverse().map((entry,ri)=>{
+    const i=S.journal.length-1-ri;
+    const r=REALMS.find(r=>r.id===entry.realmId);
+    return `<div class="journal-entry">
+      <div class="entry-header">
+        <div><div class="entry-date">${entry.displayDate}</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${r?`<span class="entry-realm-tag" style="border-color:${r.color};color:${r.color}">${r.icon} ${r.name}</span>`:''}
+          <button class="entry-del" onclick="delJournalEntry(${i})">✕</button>
+        </div>
+      </div>
+      <div class="entry-text">${escHtml(entry.text)}</div>
+      <div class="entry-xp">+${entry.xp} Lore XP earned · ${entry.wordCount} words</div>
+    </div>`;
+  }).join('');
+}
+
+function populateSelects(){
+  ['qRealm','hRealm','rRealm','journalRealm'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const cur=el.value;
+    const base=id==='journalRealm'?'<option value="">— Tag a Realm —</option>':'<option value="">— Realm —</option>';
+    el.innerHTML=base+REALMS.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
+    if(cur)el.value=cur;
+  });
+}
+
+// ── REALM POPUP ────────────────────────────────────────────────────────
+let sparkCharts={};
+function openRealmPopup(realmId){
+  const r=REALMS.find(r=>r.id===realmId);if(!r)return;
+  const rxp=S.realms[r.id]?.xp||0;const rl=levelFromXp(rxp);
+  const into=xpInto(rxp);const needed=xpNeeded(rxp);const pct=Math.min(100,(into/needed)*100);
+  const activeQuests=S.quests.filter(q=>!q.done&&q.realmId===r.id);
+  const doneQuests=S.quests.filter(q=>q.done&&q.realmId===r.id);
+  const habits=S.habits.filter(h=>h.realmId===r.id);
+  const inner=document.getElementById('realmPopupInner');
+  inner.style.setProperty('--rc',r.color);
+  inner.style.borderColor=r.color.replace('var(','').replace(')','');
+  document.getElementById('realmPopupContent').innerHTML=`
+    <div class="popup-realm-header">
+      <span class="popup-realm-icon">${r.icon}</span>
+      <div><div class="popup-realm-name">${r.name}</div><div class="popup-realm-sub">Realm Level ${rl} · ${rxp.toLocaleString()} total XP</div></div>
+    </div>
+    <div class="popup-desc">${r.desc}</div>
+    <div class="popup-section">
+      <div class="popup-section-title">XP Progress</div>
+      <div class="popup-xp-bar-wrap"><div class="popup-xp-bar"><div class="popup-xp-fill" style="width:${pct}%"></div></div></div>
+      <div class="popup-xp-lbl"><span>${into.toLocaleString()} / ${needed.toLocaleString()} XP to Level ${rl+1}</span><span>${Math.round(pct)}%</span></div>
+    </div>
+    <div class="popup-section">
+      <div class="popup-section-title">Counts as activities</div>
+      <div class="popup-activities">${r.activities.map(a=>`<span class="activity-tag">${a}</span>`).join('')}</div>
+    </div>
+    ${activeQuests.length?`<div class="popup-section"><div class="popup-section-title">Active Quests (${activeQuests.length})</div><div class="popup-items-list">${activeQuests.map(q=>`<div class="popup-item">⚔ ${q.name} <span style="margin-left:auto;color:var(--gold);font-size:0.8rem">+${q.xp} XP</span></div>`).join('')}</div></div>`:''}
+    ${habits.length?`<div class="popup-section"><div class="popup-section-title">Active Rituals (${habits.length})</div><div class="popup-items-list">${habits.map(h=>`<div class="popup-item">🕯 ${h.name} <span style="margin-left:auto;color:var(--gold);font-size:0.8rem">🔥 ${calcStreak(h)} day streak</span></div>`).join('')}</div></div>`:''}
+    ${doneQuests.length?`<div class="popup-section"><div class="popup-section-title">Completed (${doneQuests.length})</div><div class="popup-items-list">${doneQuests.slice(0,3).map(q=>`<div class="popup-item popup-item-done">✓ ${q.name}</div>`).join('')}${doneQuests.length>3?`<div class="popup-item" style="opacity:0.4">…and ${doneQuests.length-3} more</div>`:''}</div></div>`:''}
+    <div class="popup-section">
+      <div class="popup-section-title">XP — Last 30 Days</div>
+      <div class="popup-sparkline"><canvas id="sparkCanvas"></canvas></div>
+    </div>`;
+  document.getElementById('realmPopup').classList.add('show');
+  setTimeout(()=>{
+    if(sparkCharts.spark)sparkCharts.spark.destroy();
+    const days30=[];for(let i=29;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days30.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);}
+    const xpByDay=days30.map(d=>(S.xpLog||[]).filter(l=>l.date===d&&l.realmId===r.id).reduce((a,l)=>a+l.xp,0));
+    // resolve CSS var to hex
+    const colorMap={'var(--rv)':'#e05c3a','var(--rm)':'#3b8fd4','var(--ra)':'#a855f7','var(--rf)':'#22c984','var(--rw)':'#f0c050','var(--rl)':'#e88c4a','var(--rh)':'#e85d8a','var(--rrev)':'#78d490'};
+    const resolvedColor=colorMap[r.color]||'#c9922a';
+    sparkCharts.spark=new Chart(document.getElementById('sparkCanvas'),{
+      type:'bar',data:{labels:days30.map((d,i)=>i%5===0?d.slice(5):''),datasets:[{data:xpByDay,backgroundColor:resolvedColor+'55',borderColor:resolvedColor,borderWidth:1,borderRadius:2}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>days30[ctx[0].dataIndex],label:ctx=>`+${ctx.raw} XP`}}},scales:{x:{ticks:{color:'rgba(240,221,176,0.4)',font:{size:10}},grid:{display:false},border:{display:false}},y:{ticks:{color:'rgba(240,221,176,0.4)',font:{size:10}},grid:{color:'rgba(201,146,42,0.06)'},border:{display:false},min:0}}}
+    });
+  },50);
+}
+function closeRealmPopup(e){if(e.target.id==='realmPopup')closeRealmPopupDirect();}
+function closeRealmPopupDirect(){document.getElementById('realmPopup').classList.remove('show');}
+
+// ── JOURNAL ────────────────────────────────────────────────────────────
+function insertPrompt(text){
+  const ta=document.getElementById('journalText');
+  const start=ta.selectionStart,end=ta.selectionEnd;
+  const val=ta.value;
+  const before=val.substring(0,start);const after=val.substring(end);
+  const prefix=before.length>0&&!before.endsWith('\n')?'\n':'';
+  ta.value=before+prefix+text+after;
+  ta.focus();ta.setSelectionRange(start+prefix.length+text.length,start+prefix.length+text.length);
+}
+function saveJournalEntry(){
+  const text=document.getElementById('journalText').value.trim();
+  if(!text){document.getElementById('journalText').focus();return;}
+  const wordCount=text.split(/\s+/).filter(Boolean).length;
+  const xp=Math.min(150,Math.max(20,Math.floor(wordCount*0.8)));
+  const realmId=document.getElementById('journalRealm').value;
+  const entry={id:Date.now(),text,displayDate:medievalDate(),date:todayStr(),realmId:realmId||'lore',wordCount,xp};
+  if(!S.journal)S.journal=[];
+  S.journal.push(entry);
+  applyXp('lore',xp,null);
+  document.getElementById('journalText').value='';
+  document.getElementById('journalRealm').value='';
+  showToast(`📜 Entry sealed into the Chronicle · +${xp} Lore XP`);
+  checkAchievements();save();renderJournal();
+}
+function delJournalEntry(i){
+  const entry=S.journal[i];
+  S.journal.splice(i,1);
+  save();renderJournal();
+  showUndo('Journal entry deleted',()=>{
+    S.journal.splice(i,0,entry);
+    save();renderJournal();
+  });
+}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── QUEST ACTIONS ──────────────────────────────────────────────────────
+function toggleQuest(i,e){
+  const q=S.quests[i];if(q.done)return;
+  if(q.type==='boss'){
+    const prevHits=q.bossHits||0;
+    q.bossHits=prevHits+1;
+    const xpChunk=Math.round(q.xp/q.bossTarget);
+    applyXp(q.realmId,xpChunk,e);
+    if(q.bossHits>=q.bossTarget){q.done=true;q.doneDate=todayStr();}
+    showUndo(q.done?`⚔️ Boss defeated! ${q.name}`:`⚔️ Hit! ${q.bossTarget-q.bossHits} HP remaining`,()=>{
+      q.bossHits=prevHits;if(q.done){q.done=false;q.doneDate=null;}
+      S.realms[q.realmId||REALMS[0].id].xp=Math.max(0,(S.realms[q.realmId||REALMS[0].id].xp||0)-xpChunk);
+      S.xpLog.pop();save();render();
+    });
+  } else {
+    q.done=true;q.doneDate=todayStr();
+    applyXp(q.realmId,q.xp,e);
+    showUndo(`✓ Quest complete: ${q.name.slice(0,30)}`,()=>{
+      q.done=false;q.doneDate=null;
+      if(q.realmId)S.realms[q.realmId].xp=Math.max(0,(S.realms[q.realmId].xp||0)-q.xp);
+      S.xpLog.pop();save();render();
+    });
+  }
+  save();render();
+}
+function delQuest(i){
+  const q=S.quests[i];
+  if(q.done){S.quests.splice(i,1);save();render();return;}
+  showUndo(`Quest abandoned: ${q.name.slice(0,30)}`,()=>{S.quests.splice(i,0,q);save();render();});
+  S.quests.splice(i,1);save();render();
+}
+function addQuest(){
+  const name=document.getElementById('qName').value.trim();if(!name){document.getElementById('qName').focus();return;}
+  const realmId=document.getElementById('qRealm').value;const xp=parseInt(document.getElementById('qDiff').value);
+  const type=document.getElementById('qType').value;const bossTarget=parseInt(document.getElementById('bossTarget').value)||10;
+  S.quests.unshift({id:Date.now(),name,realmId,xp,type,bossTarget:type==='boss'?bossTarget:undefined,bossHits:0,done:false});
+  document.getElementById('qName').value='';toggle('questForm');save();render();
+}
+
+// ── HABIT ACTIONS ──────────────────────────────────────────────────────
+function toggleHabitDay(i,dateStr,e){
+  const h=S.habits[i];if(!h.days)h.days={};
+  const was=h.days[dateStr];
+  h.days[dateStr]=!was;
+  if(!was&&dateStr===todayStr()){
+    applyXp(h.realmId,20,e);
+    showUndo(`🕯 ${h.name} — logged for today`,()=>{
+      h.days[dateStr]=false;
+      if(h.realmId)S.realms[h.realmId].xp=Math.max(0,(S.realms[h.realmId].xp||0)-20);
+      S.xpLog.pop();save();render();
+    });
+  }
+  save();render();
+}
+function delHabit(i){
+  const h=S.habits[i];
+  showUndo(`Ritual removed: ${h.name}`,()=>{S.habits.splice(i,0,h);save();render();});
+  S.habits.splice(i,1);save();render();
+}
+function addHabit(){
+  const name=document.getElementById('hName').value.trim();if(!name){document.getElementById('hName').focus();return;}
+  const realmId=document.getElementById('hRealm').value;
+  S.habits.push({id:Date.now(),name,realmId,days:{}});
+  document.getElementById('hName').value='';toggle('habitForm');save();render();
+}
+
+// ── REWARD ACTIONS ──────────────────────────────────────────────────────
+function rewardTick(i,e){
+  const rw=S.rewards[i];
+  if(rw.claimed||rw.count>=rw.target)return; // cap at target — no phantom XP
+  const prevCount=rw.count;
+  rw.count=(rw.count||0)+1;
+  const xpPer=Math.round(50*(rw.target/10));
+  applyXp(rw.realmId,xpPer,e);
+  showUndo(`+ Progress logged: ${rw.title.slice(0,30)}`,()=>{
+    rw.count=prevCount;
+    if(rw.realmId)S.realms[rw.realmId].xp=Math.max(0,(S.realms[rw.realmId].xp||0)-xpPer);
+    S.xpLog.pop();save();render();
+  });
+  if(rw.count>=rw.target)showToast('🎉 Reward unlocked! Hit Claim to celebrate.');
+  save();render();
+}
+function claimReward(i){
+  const rw=S.rewards[i];if(rw.count<rw.target)return;
+  rw.claimed=true;
+  showModal('🎉 REWARD CLAIMED!',`"${rw.treat}" — you earned this. Go enjoy it.`);
+  checkAchievements();save();render();
+}
+function delReward(i){
+  const rw=S.rewards[i];
+  showUndo(`Reward removed: ${rw.title.slice(0,30)}`,()=>{S.rewards.splice(i,0,rw);save();render();});
+  S.rewards.splice(i,1);save();render();
+}
+function addReward(){
+  const title=document.getElementById('rTitle').value.trim();const treat=document.getElementById('rTreat').value.trim();
+  if(!title||!treat){alert('Give the goal a name and a treat!');return;}
+  const realmId=document.getElementById('rRealm').value;const target=parseInt(document.getElementById('rTarget').value)||10;
+  S.rewards.push({id:Date.now(),title,treat,realmId,target,count:0,claimed:false});
+  document.getElementById('rTitle').value='';document.getElementById('rTreat').value='';
+  toggle('rewardForm');save();render();
+}
+
+// ── ACHIEVEMENTS ───────────────────────────────────────────────────────
+function checkAchievements(){
+  if(!S.earnedAch)S.earnedAch=[];
+  ACH_DEFS.forEach(a=>{if(!S.earnedAch.includes(a.id)&&a.check(S)){S.earnedAch.push(a.id);setTimeout(()=>showToast(`🏆 Achievement: ${a.name}!`),700);}});
+}
+
+// ── CHARTS ─────────────────────────────────────────────────────────────
+function setChartWindow(days,btn){chartWindow=days;document.querySelectorAll('.chart-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderCharts();}
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`lifequest-${todayStr()}.json`;a.click();
+  showToast('✓ Data exported!');
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{try{const imp=JSON.parse(ev.target.result);if(!imp.realms)throw new Error();S={...S,...imp};if(!S.journal)S.journal=[];REALMS.forEach(r=>{if(!S.realms[r.id])S.realms[r.id]={xp:0};});save();render();showToast('✓ Chronicle restored. Welcome back, Lorekeeper.');}catch{alert('Invalid save file.');}};
+  reader.readAsText(file);e.target.value='';
+}
+let chartInstances={};
+function renderCharts(){
+  const grid=document.getElementById('chartsGrid');Object.values(chartInstances).forEach(c=>c.destroy());chartInstances={};grid.innerHTML='';
+  const baseOpts={color:'rgba(240,221,176,0.6)',font:{family:"'Crimson Pro',Georgia,serif",size:13}};
+  const gridColor='rgba(201,146,42,0.08)';
+  const rawColors=['#e05c3a','#3b8fd4','#a855f7','#22c984','#f0c050','#e88c4a','#e85d8a','#78d490'];
+  const mk=(cls,extra,html)=>{const d=document.createElement('div');d.className='chart-card';if(extra)d.style.gridColumn=extra;d.innerHTML=html;grid.appendChild(d);return d;};
+  mk('chart-card','1/-1',`<div class="chart-title">XP per Realm — Total</div><div class="chart-wrap"><canvas id="realmChart"></canvas></div>`);
+  mk('chart-card','',`<div class="chart-title">Realm Balance</div><div class="chart-wrap"><canvas id="radarChart"></canvas></div>`);
+  const winLabel=chartWindow===0?'All Time':`Last ${chartWindow} Days`;
+  mk('chart-card','',`<div class="chart-title">XP Earned — ${winLabel}</div><div class="chart-wrap"><canvas id="lineChart"></canvas></div>`);
+  chartInstances.realm=new Chart(document.getElementById('realmChart'),{type:'bar',data:{labels:REALMS.map(r=>r.icon+' '+r.name),datasets:[{data:REALMS.map(r=>S.realms[r.id]?.xp||0),backgroundColor:rawColors.map(c=>c+'55'),borderColor:rawColors,borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw.toLocaleString()} XP`}}},scales:{x:{ticks:{...baseOpts,maxRotation:35},grid:{color:gridColor},border:{color:'transparent'}},y:{ticks:baseOpts,grid:{color:gridColor},border:{color:'transparent'}}}}});
+  chartInstances.radar=new Chart(document.getElementById('radarChart'),{type:'radar',data:{labels:REALMS.map(r=>r.icon),datasets:[{data:REALMS.map(r=>levelFromXp(S.realms[r.id]?.xp||0)),backgroundColor:'rgba(201,146,42,0.15)',borderColor:'rgba(201,146,42,0.6)',borderWidth:1.5,pointBackgroundColor:'rgba(201,146,42,0.8)',pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{ticks:{display:false},grid:{color:gridColor},angleLines:{color:'rgba(201,146,42,0.1)'},pointLabels:{...baseOpts,font:{size:15}}}}}});
+  let days;
+  if(chartWindow===0){const allLog=S.xpLog||[];if(allLog.length){const earliest=allLog.reduce((a,l)=>l.date<a?l.date:a,allLog[0].date);const start=new Date(earliest+'T12:00:00');days=[];for(const d=new Date(start);d<=new Date();d.setDate(d.getDate()+1)){days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);}}else{days=[todayStr()];}}else{days=[];for(let i=chartWindow-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);}}
+  const xpByDay=days.map(d=>(S.xpLog||[]).filter(l=>l.date===d).reduce((a,l)=>a+l.xp,0));
+  const labelEvery=days.length>60?7:days.length>20?3:1;
+  chartInstances.line=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels:days.map((d,i)=>i%labelEvery===0?d.slice(5):''),datasets:[{data:xpByDay,fill:true,backgroundColor:'rgba(201,146,42,0.08)',borderColor:'rgba(201,146,42,0.6)',borderWidth:2,tension:0.4,pointRadius:days.length>30?0:3,pointBackgroundColor:'rgba(201,146,42,0.8)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>days[ctx[0].dataIndex],label:ctx=>`+${ctx.raw} XP`}}},scales:{x:{ticks:{...baseOpts,maxRotation:0},grid:{color:gridColor},border:{color:'transparent'}},y:{ticks:baseOpts,grid:{color:gridColor},border:{color:'transparent'},min:0}}}});
+}
+
+// ── UI HELPERS ─────────────────────────────────────────────────────────
+function toggle(id){document.getElementById(id).classList.toggle('open');}
+function goPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  else document.querySelectorAll('.nav-btn').forEach(b=>{if(b.textContent.trim().toLowerCase().includes(name.toLowerCase()))b.classList.add('active');});
+  if(name==='charts')setTimeout(()=>{document.querySelectorAll('.chart-btn').forEach(b=>b.classList.remove('active'));const ab=document.getElementById('cw'+chartWindow);if(ab)ab.classList.add('active');renderCharts();},50);
+}
+function showModal(t,b){document.getElementById('modalTitle').textContent=t;document.getElementById('modalBody').textContent=b;document.getElementById('modal').classList.add('show');}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+function showToast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3200);}
+function xpFlash(text,x,y){const el=document.createElement('div');el.className='xp-flash';el.textContent=text;el.style.cssText=`left:${x}px;top:${y-20}px;position:fixed;`;document.body.appendChild(el);setTimeout(()=>el.remove(),1500);}
+
+// Boss row toggle
+document.getElementById('qType').addEventListener('change',function(){document.getElementById('bossRow').style.display=this.value==='boss'?'flex':'none';});
+
+// Avatar & name
+const AVATARS=['🧙','🧝','🧛','⚔️','🛡️','🔮','🐉','🦅','🌟','⚡','🎭','🎪'];
+document.getElementById('avatarBtn').addEventListener('click',()=>{const i=(AVATARS.indexOf(S.avatar)+1)%AVATARS.length;S.avatar=AVATARS[i];save();renderSidebar();});
+document.getElementById('charNameEl').addEventListener('click',()=>{const n=prompt('Name your Lorekeeper:',S.name);if(n?.trim()){S.name=n.trim();save();renderSidebar();}});
+
+// Enter keys
+['qName','hName','rTitle'].forEach(id=>{document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')id==='qName'?addQuest():id==='hName'?addHabit():null;});});
+document.getElementById('journalText').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)saveJournalEntry();});
+
+// Particles
+function spawnParticles(){const c=document.getElementById('particles');for(let i=0;i<18;i++){const p=document.createElement('div');p.className='particle';p.style.cssText=`left:${Math.random()*100}%;animation-duration:${10+Math.random()*14}s;animation-delay:${Math.random()*16}s;`;c.appendChild(p);}}
+
+// Seed
+function seed(){
+  if(!S.quests.length)S.quests=[{id:1,name:'Apply to 5 jobs today',realmId:'wealth',xp:250,type:'quest',done:false},{id:2,name:'Complete a workout session',realmId:'vitality',xp:120,type:'quest',done:false},{id:3,name:'Read for 30 minutes',realmId:'lore',xp:50,type:'quest',done:false},{id:4,name:'Learn a new skill or finish a course',realmId:'mastery',xp:500,type:'boss',bossTarget:5,bossHits:0,done:false},{id:5,name:'Create something — sketch, write, or build',realmId:'artistry',xp:120,type:'quest',done:false}];
+  if(!S.habits.length)S.habits=[{id:101,name:'Morning walk or stretch',realmId:'vitality',days:{}},{id:102,name:'Track food intake',realmId:'vitality',days:{}},{id:103,name:'Read for 20 mins',realmId:'lore',days:{}},{id:104,name:'Work on a creative project',realmId:'artistry',days:{}}];
+  if(!S.rewards.length)S.rewards=[{id:201,title:'Apply to 10 jobs this week',treat:'Night out with friends 🍺',realmId:'wealth',target:10,count:0,claimed:false},{id:202,title:'Track diet for 7 days straight',treat:'Meal out at your favourite restaurant 🍽',realmId:'vitality',target:7,count:0,claimed:false}];
+}
+
+load();seed();spawnParticles();render();
+</script>
+</body>
+</html>
