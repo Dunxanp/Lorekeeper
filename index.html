@@ -230,7 +230,40 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 40% at 50
 .chart-btn:hover:not(.active){background:rgba(201,146,42,0.06);color:var(--parchment);}
 .data-io-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 
-/* ── JOURNAL / CHRONICLE ── */
+/* ── SETTINGS ── */
+.settings-grid{display:flex;flex-direction:column;gap:20px;}
+.settings-section{background:var(--stone2);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.settings-section-title{font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold);letter-spacing:2px;text-transform:uppercase;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 18px;border-bottom:1px solid rgba(201,146,42,0.08);transition:background 0.15s;}
+.settings-row:last-child{border-bottom:none;}
+.settings-row:hover{background:rgba(201,146,42,0.04);}
+.settings-row-label{font-size:0.95rem;color:var(--parchment);}
+.settings-row-sub{font-size:0.8rem;color:var(--pmuted);margin-top:2px;}
+.settings-action{padding:7px 16px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--gold);font-family:'Cinzel',serif;font-size:0.75rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.settings-action:hover{background:rgba(201,146,42,0.1);border-color:var(--border-h);}
+.settings-action.danger{color:var(--red);border-color:rgba(192,57,43,0.3);}
+.settings-action.danger:hover{background:rgba(192,57,43,0.1);}
+.avatar-picker{display:flex;flex-wrap:wrap;gap:8px;padding:14px 18px;}
+.avatar-opt{width:40px;height:40px;border-radius:50%;border:2px solid var(--border);background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:1.3rem;cursor:pointer;transition:all 0.2s;}
+.avatar-opt:hover{border-color:var(--gold);transform:scale(1.1);}
+.avatar-opt.selected{border-color:var(--gold);background:rgba(201,146,42,0.15);box-shadow:0 0 10px rgba(201,146,42,0.3);}
+.class-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:14px 18px;}
+.class-opt{background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;cursor:pointer;transition:all 0.2s;}
+.class-opt:hover{border-color:var(--border-h);}
+.class-opt.selected{border-color:var(--gold);background:rgba(201,146,42,0.08);}
+.class-opt-name{font-family:'Cinzel',serif;font-size:0.82rem;color:var(--gold-l);margin-bottom:3px;}
+.class-opt-desc{font-size:0.78rem;color:var(--pmuted);line-height:1.4;}
+.toggle-wrap{display:flex;align-items:center;gap:10px;}
+.toggle{position:relative;width:40px;height:22px;cursor:pointer;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{position:absolute;inset:0;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:11px;transition:all 0.2s;}
+.toggle input:checked+.toggle-track{background:rgba(201,146,42,0.3);border-color:var(--gold);}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:var(--pmuted);border-radius:50%;transition:all 0.2s;}
+.toggle input:checked~.toggle-thumb{left:21px;background:var(--gold);}
+.about-box{padding:18px;display:flex;flex-direction:column;gap:8px;}
+.about-row{display:flex;justify-content:space-between;font-size:0.88rem;}
+.about-label{color:var(--pmuted);}
+.about-val{color:var(--parchment);font-family:'Cinzel',serif;font-size:0.82rem;}
 .journal-page{display:flex;flex-direction:column;gap:18px;}
 .journal-compose{background:linear-gradient(135deg,rgba(30,21,16,0.95),rgba(14,11,7,0.98));border:1px solid var(--border);border-radius:8px;padding:22px;position:relative;}
 .journal-compose::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-l));border-radius:8px 8px 0 0;}
@@ -347,6 +380,7 @@ select option{background:#1a0f05;}
       <button class="nav-btn" onclick="goPage('chronicle',this)"><span class="nav-icon">📜</span>Chronicle</button>
       <button class="nav-btn" onclick="goPage('achievements',this)"><span class="nav-icon">🏆</span>Achievements</button>
       <button class="nav-btn" onclick="goPage('charts',this)"><span class="nav-icon">📊</span>Chronicles</button>
+      <button class="nav-btn" onclick="goPage('settings',this)"><span class="nav-icon">⚙️</span>Settings</button>
     </nav>
     <div class="rune-div"><div class="rune-div-gem"></div></div>
     <div>
@@ -504,6 +538,69 @@ select option{background:#1a0f05;}
     <div class="charts-grid" id="chartsGrid"></div>
   </div>
 
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="sec-head"><div class="sec-title">Settings</div></div>
+    <div class="settings-grid">
+
+      <!-- Character -->
+      <div class="settings-section">
+        <div class="settings-section-title">Character</div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Name</div><div class="settings-row-sub" id="settingsNameSub">Brave Adventurer</div></div>
+          <button class="settings-action" onclick="editName()">Edit Name</button>
+        </div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+          <div class="settings-row-label">Avatar</div>
+          <div class="avatar-picker" id="avatarPicker"></div>
+        </div>
+      </div>
+
+      <!-- Class -->
+      <div class="settings-section">
+        <div class="settings-section-title">Class</div>
+        <div class="class-picker" id="classPicker"></div>
+      </div>
+
+      <!-- Display -->
+      <div class="settings-section">
+        <div class="settings-section-title">Display</div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Particle effects</div><div class="settings-row-sub">Floating gold particles in background</div></div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="particleToggle" checked onchange="toggleParticles(this.checked)"/>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data -->
+      <div class="settings-section">
+        <div class="settings-section-title">Data</div>
+        <div class="settings-row">
+          <div><div class="settings-row-label">Reset all progress</div><div class="settings-row-sub">Wipes all XP, quests, habits, journal and rewards. Cannot be undone.</div></div>
+          <button class="settings-action danger" onclick="resetProgress()">Reset</button>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="settings-section">
+        <div class="settings-section-title">About</div>
+        <div class="about-box">
+          <div class="about-row"><span class="about-label">App</span><span class="about-val">Lorekeeper</span></div>
+          <div class="about-row"><span class="about-label">Version</span><span class="about-val">1.0 — Personal Edition</span></div>
+          <div class="about-row"><span class="about-label">Tagline</span><span class="about-val">Your legend, recorded.</span></div>
+          <div class="about-row"><span class="about-label">Built</span><span class="about-val">March 2026</span></div>
+          <div class="about-row"><span class="about-label">URL</span><span class="about-val">thelorekeeper.netlify.app</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </main>
 </div>
 
@@ -638,7 +735,7 @@ function showUndo(msg,undoFn,durationMs=5000){
 function clearUndo(){if(undoTimer){clearTimeout(undoTimer);undoTimer=null;}if(undoEl){undoEl.remove();undoEl=null;}}
 
 // ── RENDER ─────────────────────────────────────────────────────────────
-function render(){renderSidebar();renderPolymath();renderRealms();renderDashRewards();renderDashQuests();renderDashHabits();renderQuests();renderHabits();renderRewards();renderAchievements();renderJournal();populateSelects();}
+function render(){renderSidebar();renderPolymath();renderRealms();renderDashRewards();renderDashQuests();renderDashHabits();renderQuests();renderHabits();renderRewards();renderAchievements();renderJournal();renderSettings();populateSelects();}
 
 function renderSidebar(){
   document.getElementById('avatarBtn').textContent=S.avatar;
@@ -936,13 +1033,16 @@ function toggleHabitDay(i,dateStr,e){
   const h=S.habits[i];if(!h.days)h.days={};
   const was=h.days[dateStr];
   h.days[dateStr]=!was;
-  if(!was&&dateStr===todayStr()){
-    applyXp(h.realmId,20,e);
-    showUndo(`🕯 ${h.name} — logged for today`,()=>{
-      h.days[dateStr]=false;
+  if(dateStr===todayStr()){
+    if(!was){
+      // Ticking today — award XP with flash, no undo toast (the square IS the feedback)
+      applyXp(h.realmId,20,e);
+    } else {
+      // Unticking today — silently reverse XP
       if(h.realmId)S.realms[h.realmId].xp=Math.max(0,(S.realms[h.realmId].xp||0)-20);
-      S.xpLog.pop();save();render();
-    });
+      if(S.xpLog&&S.xpLog.length)S.xpLog.pop();
+      clearUndo();
+    }
   }
   save();render();
 }
@@ -1060,6 +1160,43 @@ document.getElementById('charNameEl').addEventListener('click',()=>{const n=prom
 ['qName','hName','rTitle'].forEach(id=>{document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')id==='qName'?addQuest():id==='hName'?addHabit():null;});});
 document.getElementById('journalText').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)saveJournalEntry();});
 
+// ── SETTINGS ───────────────────────────────────────────────────────────
+const CLASSES=[
+  {id:'polymath', name:'⚡ Polymath',  desc:'Jack of all trades. Bonus XP for touching multiple realms in a week.'},
+  {id:'scholar',  name:'📚 Scholar',   desc:'Career and knowledge focused. Bonus XP in Mastery and Lore.'},
+  {id:'athlete',  name:'💪 Athlete',   desc:'Body and fitness focused. Bonus XP in Vitality.'},
+  {id:'artisan',  name:'🎨 Artisan',   desc:'Creativity focused. Bonus XP in Artistry and Reverie.'},
+  {id:'merchant', name:'💰 Merchant',  desc:'Finance and career focused. Bonus XP in Wealth and Mastery.'},
+  {id:'wanderer', name:'🎲 Wanderer',  desc:'Balanced explorer. Small bonus across all realms equally.'},
+];
+function renderSettings(){
+  const nameSub=document.getElementById('settingsNameSub');if(nameSub)nameSub.textContent=S.name;
+  const picker=document.getElementById('avatarPicker');
+  if(picker)picker.innerHTML=AVATARS.map(a=>`<div class="avatar-opt ${S.avatar===a?'selected':''}" onclick="pickAvatar('${a}')">${a}</div>`).join('');
+  const cp=document.getElementById('classPicker');
+  if(cp)cp.innerHTML=CLASSES.map(c=>`<div class="class-opt ${(S.charClass||'polymath')===c.id?'selected':''}" onclick="pickClass('${c.id}')"><div class="class-opt-name">${c.name}</div><div class="class-opt-desc">${c.desc}</div></div>`).join('');
+  const pt=document.getElementById('particleToggle');if(pt)pt.checked=S.particles!==false;
+}
+function pickAvatar(a){S.avatar=a;save();renderSidebar();renderSettings();}
+function pickClass(id){
+  S.charClass=id;const c=CLASSES.find(c=>c.id===id);
+  save();renderSettings();renderSidebar();
+  showToast(`Class changed to ${c.name}`);
+}
+function editName(){
+  const n=prompt('Name your Lorekeeper:',S.name);
+  if(n?.trim()){S.name=n.trim();save();renderSidebar();renderSettings();}
+}
+function toggleParticles(on){
+  S.particles=on;save();
+  document.getElementById('particles').style.display=on?'block':'none';
+}
+function resetProgress(){
+  if(!confirm('⚠️ This will permanently wipe ALL your progress — XP, quests, habits, journal entries and rewards. There is no undo.\n\nAre you absolutely sure?'))return;
+  if(!confirm('Last chance. This cannot be reversed. Reset everything?'))return;
+  localStorage.removeItem('lq_poly');location.reload();
+}
+
 // Particles
 function spawnParticles(){const c=document.getElementById('particles');for(let i=0;i<18;i++){const p=document.createElement('div');p.className='particle';p.style.cssText=`left:${Math.random()*100}%;animation-duration:${10+Math.random()*14}s;animation-delay:${Math.random()*16}s;`;c.appendChild(p);}}
 
@@ -1070,7 +1207,7 @@ function seed(){
   if(!S.rewards.length)S.rewards=[{id:201,title:'Apply to 10 jobs this week',treat:'Night out with friends 🍺',realmId:'wealth',target:10,count:0,claimed:false},{id:202,title:'Track diet for 7 days straight',treat:'Meal out at your favourite restaurant 🍽',realmId:'vitality',target:7,count:0,claimed:false}];
 }
 
-load();seed();spawnParticles();render();
+load();seed();spawnParticles();if(S.particles===false)document.getElementById('particles').style.display='none';render();
 </script>
 </body>
 </html>
