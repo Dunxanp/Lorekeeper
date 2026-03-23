@@ -61,7 +61,7 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 40% at 50
 .avatar:hover{box-shadow:0 0 30px rgba(201,146,42,0.6);transform:scale(1.05);}
 .char-name{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold-l);cursor:pointer;text-align:center;text-shadow:0 0 10px rgba(240,192,80,0.2);}
 .char-name:hover{text-decoration:underline;}
-.class-badge{font-size:0.68rem;letter-spacing:2px;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.25);border-radius:20px;padding:3px 13px;color:var(--gold);}
+.class-badge{font-size:0.68rem;letter-spacing:2px;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.25);border-radius:20px;padding:3px 13px;color:var(--gold);}.title-badge{font-size:0.65rem;letter-spacing:1px;color:rgba(240,221,176,0.4);font-style:italic;margin-top:2px;}
 .bar-wrap{width:100%;}
 .bar-lbl{display:flex;justify-content:space-between;font-size:0.73rem;color:var(--pmuted);margin-bottom:4px;}
 .bar-track{height:8px;background:rgba(0,0,0,0.5);border-radius:2px;border:1px solid rgba(201,146,42,0.12);overflow:hidden;}
@@ -231,6 +231,46 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 40% at 50
 .data-io-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 
 /* ── SETTINGS ── */
+/* ── PROPHECY OVERLAY ── */
+#prophecyOverlay{position:fixed;inset:0;z-index:9999;background:#0a0704;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 1.2s ease;}
+#prophecyOverlay.visible{opacity:1;}
+.prophecy-wrap{max-width:660px;width:100%;display:flex;flex-direction:column;align-items:center;gap:0;opacity:0;transform:translateY(24px);transition:opacity 1s ease 0.6s,transform 1s ease 0.6s;}
+#prophecyOverlay.visible .prophecy-wrap{opacity:1;transform:translateY(0);}
+.prophecy-flame{font-size:2.2rem;margin-bottom:4px;animation:flicker 1.8s ease-in-out infinite;}
+.prophecy-eyebrow{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:4px;color:rgba(201,146,42,0.5);text-transform:uppercase;margin-bottom:18px;}
+.prophecy-title{font-family:'Cinzel Decorative',serif;font-size:1.6rem;color:var(--gold-l);text-shadow:0 0 30px rgba(240,192,80,0.4);text-align:center;margin-bottom:6px;}
+.prophecy-sub{font-family:'Crimson Pro',serif;font-style:italic;font-size:1.05rem;color:var(--pdim);text-align:center;margin-bottom:28px;line-height:1.6;}
+.prophecy-scroll{width:100%;background:linear-gradient(160deg,#2a1d0e,#1a1008);border:1px solid rgba(201,146,42,0.3);border-radius:4px;padding:28px 32px;position:relative;box-shadow:0 0 60px rgba(0,0,0,0.8),inset 0 0 40px rgba(0,0,0,0.3);}
+.prophecy-scroll::before{content:'';position:absolute;inset:3px;border:1px solid rgba(201,146,42,0.1);border-radius:3px;pointer-events:none;}
+.prophecy-prompt{font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(201,146,42,0.6);letter-spacing:2px;margin-bottom:16px;text-transform:uppercase;}
+.prophecy-textarea{width:100%;min-height:200px;background:transparent;border:none;outline:none;font-family:'Crimson Pro',Georgia,serif;font-size:1.05rem;color:var(--parchment);resize:vertical;line-height:1.8;caret-color:var(--gold);}
+.prophecy-textarea::placeholder{color:rgba(240,221,176,0.2);font-style:italic;}
+.prophecy-hints{margin-top:14px;padding-top:14px;border-top:1px solid rgba(201,146,42,0.12);display:flex;flex-direction:column;gap:6px;}
+.prophecy-hint{font-size:0.85rem;color:rgba(240,221,176,0.2);font-style:italic;display:flex;align-items:flex-start;gap:8px;}
+.prophecy-hint::before{content:'✦';color:rgba(201,146,42,0.25);font-style:normal;flex-shrink:0;margin-top:1px;}
+.prophecy-seal-btn{margin-top:24px;background:linear-gradient(135deg,#c9922a,#f0c050);border:none;color:#1a0f05;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:2px;padding:14px 36px;border-radius:3px;cursor:pointer;text-transform:uppercase;transition:all 0.3s;box-shadow:0 4px 20px rgba(201,146,42,0.3);}
+.prophecy-seal-btn:hover{transform:translateY(-2px);box-shadow:0 6px 30px rgba(201,146,42,0.5);}
+.prophecy-seal-btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
+.prophecy-skip{margin-top:12px;font-size:0.78rem;color:rgba(240,221,176,0.2);background:none;border:none;cursor:pointer;font-family:'Crimson Pro',serif;font-style:italic;transition:color 0.2s;}
+.prophecy-skip:hover{color:rgba(240,221,176,0.45);}
+@keyframes sealDrop{0%{opacity:0;transform:scale(2) rotate(-20deg);}60%{transform:scale(0.9) rotate(3deg);}100%{opacity:1;transform:scale(1) rotate(0deg);}}
+.prophecy-page-wrap{display:flex;flex-direction:column;align-items:center;gap:28px;padding:20px 0;}
+.prophecy-sealed-card{max-width:520px;width:100%;background:linear-gradient(160deg,#2a1d0e,#1a1008);border:1px solid rgba(201,146,42,0.25);border-radius:4px;padding:40px 36px;text-align:center;position:relative;}
+.prophecy-wax{font-size:3.5rem;display:block;margin-bottom:12px;filter:drop-shadow(0 0 12px rgba(201,146,42,0.4));}
+.prophecy-locked-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-l);margin-bottom:8px;}
+.prophecy-locked-date{font-size:0.82rem;color:var(--pdim);margin-bottom:20px;font-style:italic;}
+.prophecy-countdown{font-family:'Cinzel',serif;font-size:2rem;color:var(--gold);margin-bottom:6px;text-shadow:0 0 20px rgba(201,146,42,0.4);}
+.prophecy-countdown-lbl{font-size:0.72rem;color:var(--pmuted);letter-spacing:2px;text-transform:uppercase;}
+.prophecy-no-prophecy{text-align:center;color:var(--pmuted);font-style:italic;font-size:0.95rem;}
+.prophecy-reveal-overlay{position:fixed;inset:0;z-index:8888;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:24px;}
+.prophecy-reveal-wrap{max-width:620px;width:100%;background:linear-gradient(160deg,#2a1d0e,#1a1008);border:1px solid rgba(201,146,42,0.4);border-radius:4px;padding:36px;text-align:left;position:relative;max-height:82vh;overflow-y:auto;}
+.prophecy-reveal-header{text-align:center;margin-bottom:24px;}
+.prophecy-reveal-eyebrow{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:4px;color:rgba(201,146,42,0.6);text-transform:uppercase;margin-bottom:10px;}
+.prophecy-reveal-title{font-family:'Cinzel Decorative',serif;font-size:1.3rem;color:var(--gold-l);text-shadow:0 0 20px rgba(240,192,80,0.4);}
+.prophecy-reveal-meta{font-size:0.82rem;color:var(--pmuted);font-style:italic;margin-top:6px;}
+.prophecy-reveal-text{font-family:'Crimson Pro',serif;font-size:1.05rem;color:var(--parchment);line-height:1.9;white-space:pre-wrap;border-top:1px solid rgba(201,146,42,0.15);border-bottom:1px solid rgba(201,146,42,0.15);padding:20px 0;margin:16px 0;}
+.prophecy-reveal-close{display:block;width:100%;margin-top:4px;background:linear-gradient(135deg,#c9922a,#f0c050);border:none;color:#1a0f05;font-family:'Cinzel',serif;font-size:0.82rem;letter-spacing:2px;padding:13px;border-radius:3px;cursor:pointer;text-transform:uppercase;}
+
 .settings-grid{display:flex;flex-direction:column;gap:20px;}
 .settings-section{background:var(--stone2);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
 .settings-section-title{font-family:'Cinzel',serif;font-size:0.78rem;color:var(--gold);letter-spacing:2px;text-transform:uppercase;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);}
@@ -365,7 +405,8 @@ select option{background:#1a0f05;}
     <div class="char-mini">
       <div class="avatar" id="avatarBtn">🧙</div>
       <div class="char-name" id="charNameEl">Brave Adventurer</div>
-      <div class="class-badge">⚡ POLYMATH</div>
+		<div class="class-badge" id="classBadgeEl">⚡ POLYMATH</div>
+		<div class="title-badge" id="titleBadgeEl"></div>
       <div class="bar-wrap">
         <div class="bar-lbl"><span id="overallLvlLbl">Level 1</span><span id="overallXpLbl">0 / 200 XP</span></div>
         <div class="bar-track"><div class="bar-fill" id="overallBar" style="width:0%"></div></div>
@@ -380,6 +421,7 @@ select option{background:#1a0f05;}
       <button class="nav-btn" onclick="goPage('chronicle',this)"><span class="nav-icon">📜</span>Chronicle</button>
       <button class="nav-btn" onclick="goPage('achievements',this)"><span class="nav-icon">🏆</span>Achievements</button>
       <button class="nav-btn" onclick="goPage('charts',this)"><span class="nav-icon">📊</span>Chronicles</button>
+      <button class="nav-btn" id="prophecyNavBtn" onclick="goPage('prophecy',this)"><span class="nav-icon">🜏</span>The Prophecy</button>
       <button class="nav-btn" onclick="goPage('settings',this)"><span class="nav-icon">⚙️</span>Settings</button>
     </nav>
     <div class="rune-div"><div class="rune-div-gem"></div></div>
@@ -538,6 +580,12 @@ select option{background:#1a0f05;}
     <div class="charts-grid" id="chartsGrid"></div>
   </div>
 
+  <!-- PROPHECY PAGE -->
+  <div class="page" id="page-prophecy">
+    <div class="sec-head"><div class="sec-title">The Prophecy</div></div>
+    <div class="prophecy-page-wrap" id="prophecyPageContent"></div>
+  </div>
+
   <!-- SETTINGS -->
   <div class="page" id="page-settings">
     <div class="sec-head"><div class="sec-title">Settings</div></div>
@@ -575,6 +623,14 @@ select option{background:#1a0f05;}
             </label>
           </div>
         </div>
+		<!-- Title -->
+      <div class="settings-section">
+        <div class="settings-section-title">Active Title</div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+          <div class="settings-row-sub">Choose which title displays beneath your class</div>
+          <div id="titlePicker" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;"></div>
+        </div>
+      </div>
       </div>
 
       <!-- Data -->
@@ -591,7 +647,7 @@ select option{background:#1a0f05;}
         <div class="settings-section-title">About</div>
         <div class="about-box">
           <div class="about-row"><span class="about-label">App</span><span class="about-val">Lorekeeper</span></div>
-          <div class="about-row"><span class="about-label">Version</span><span class="about-val">1.0 — Personal Edition</span></div>
+          <div class="about-row"><span class="about-label">Version</span><span class="about-val">1.1 — The Prophecy</span></div>
           <div class="about-row"><span class="about-label">Tagline</span><span class="about-val">Your legend, recorded.</span></div>
           <div class="about-row"><span class="about-label">Built</span><span class="about-val">March 2026</span></div>
           <div class="about-row"><span class="about-label">URL</span><span class="about-val">thelorekeeper.netlify.app</span></div>
@@ -602,6 +658,42 @@ select option{background:#1a0f05;}
   </div>
 
 </main>
+</div>
+
+<!-- Prophecy First-Boot Overlay -->
+<div id="prophecyOverlay" style="display:none;">
+  <div class="prophecy-wrap">
+    <div class="prophecy-flame">🕯</div>
+    <div class="prophecy-eyebrow">The Legend Begins</div>
+    <div class="prophecy-title">Lorekeeper</div>
+    <div class="prophecy-sub">Before your quest begins, write a letter to the hero you will become.<br>It will be sealed for one year. Only you will read it.</div>
+    <div class="prophecy-scroll">
+      <div class="prophecy-prompt">✦ Your Prophecy ✦</div>
+      <textarea class="prophecy-textarea" id="prophecyInput" placeholder="Write to your future self..."></textarea>
+      <div class="prophecy-hints">
+        <div class="prophecy-hint">A habit you keep breaking that you want to finally conquer</div>
+        <div class="prophecy-hint">Where you want to be with your fitness, health or energy</div>
+        <div class="prophecy-hint">Something you want to read, learn or create this year</div>
+        <div class="prophecy-hint">A fear you hope you've faced by the time you read this</div>
+        <div class="prophecy-hint">How you want to feel — not what you want to have</div>
+      </div>
+    </div>
+    <button class="prophecy-seal-btn" id="prophecySealBtn" onclick="sealProphecy()">🜏 Seal the Prophecy</button>
+    <button class="prophecy-skip" onclick="skipProphecy()">I'll write this later</button>
+  </div>
+</div>
+
+<!-- Prophecy Reveal Overlay -->
+<div class="prophecy-reveal-overlay" id="prophecyRevealOverlay" style="display:none;">
+  <div class="prophecy-reveal-wrap">
+    <div class="prophecy-reveal-header">
+      <div class="prophecy-reveal-eyebrow">✦ One Year Ago ✦</div>
+      <div class="prophecy-reveal-title">The Prophecy Revealed</div>
+      <div class="prophecy-reveal-meta" id="prophecyRevealMeta"></div>
+    </div>
+    <div class="prophecy-reveal-text" id="prophecyRevealText"></div>
+    <button class="prophecy-reveal-close" onclick="closeProphecyReveal()">The legend continues 🕯</button>
+  </div>
 </div>
 
 <!-- Level Up Modal -->
@@ -711,7 +803,7 @@ function applyXp(realmId,baseXp,e){
   if(e)xpFlash(`+${final} XP${mult>1?' ⚡×'+mult.toFixed(1):''}`,e.clientX,e.clientY);
   const newLvl=levelFromXp(totalXp());
   if(newLvl>prevLvl)setTimeout(()=>showModal(`⚡ LEVEL ${newLvl}!`,`The legend deepens. A master of none — and keeper of all.`),400);
-  checkAchievements();save();
+checkAchievements();checkTitles();save();
 }
 
 // ── UNDO SYSTEM ────────────────────────────────────────────────────────
@@ -735,7 +827,7 @@ function showUndo(msg,undoFn,durationMs=5000){
 function clearUndo(){if(undoTimer){clearTimeout(undoTimer);undoTimer=null;}if(undoEl){undoEl.remove();undoEl=null;}}
 
 // ── RENDER ─────────────────────────────────────────────────────────────
-function render(){renderSidebar();renderPolymath();renderRealms();renderDashRewards();renderDashQuests();renderDashHabits();renderQuests();renderHabits();renderRewards();renderAchievements();renderJournal();renderSettings();populateSelects();}
+function render(){renderSidebar();renderPolymath();renderRealms();renderDashRewards();renderDashQuests();renderDashHabits();renderQuests();renderHabits();renderRewards();renderAchievements();renderJournal();renderSettings();renderProphecyPage();populateSelects();}
 
 function renderSidebar(){
   document.getElementById('avatarBtn').textContent=S.avatar;
@@ -745,6 +837,8 @@ function renderSidebar(){
   document.getElementById('overallLvlLbl').textContent=`Level ${lvl}`;
   document.getElementById('overallXpLbl').textContent=`${into.toLocaleString()} / ${needed.toLocaleString()} XP`;
   document.getElementById('overallBar').style.width=pct+'%';
+  const tb=document.getElementById('titleBadgeEl');
+  if(tb)tb.textContent=S.activeTitle?(TITLES.find(t=>t.id===S.activeTitle)?.name||''):'';
   document.getElementById('realmMiniList').innerHTML=REALMS.map(r=>{
     const rxp=S.realms[r.id]?.xp||0;const rl=levelFromXp(rxp);
     const p=Math.min(100,(xpInto(rxp)/xpNeeded(rxp))*100);
@@ -1095,6 +1189,20 @@ function addReward(){
 }
 
 // ── ACHIEVEMENTS ───────────────────────────────────────────────────────
+function checkTitles(){
+  if(!S.unlockedTitles)S.unlockedTitles=[];
+  TITLES.forEach(t=>{
+    if(!S.unlockedTitles.includes(t.id)&&t.check(S)){
+      S.unlockedTitles.push(t.id);
+      setTimeout(()=>showTitleModal(t),400);
+    }
+  });
+}
+function showTitleModal(t){
+  document.getElementById('modalTitle').textContent='✦ Title Unlocked ✦';
+  document.getElementById('modalBody').textContent=`${t.name}\n"${t.desc}"`;
+  document.getElementById('modal').classList.add('show');
+}
 function checkAchievements(){
   if(!S.earnedAch)S.earnedAch=[];
   ACH_DEFS.forEach(a=>{if(!S.earnedAch.includes(a.id)&&a.check(S)){S.earnedAch.push(a.id);setTimeout(()=>showToast(`🏆 Achievement: ${a.name}!`),700);}});
@@ -1142,6 +1250,7 @@ function goPage(name,btn){
   if(btn)btn.classList.add('active');
   else document.querySelectorAll('.nav-btn').forEach(b=>{if(b.textContent.trim().toLowerCase().includes(name.toLowerCase()))b.classList.add('active');});
   if(name==='charts')setTimeout(()=>{document.querySelectorAll('.chart-btn').forEach(b=>b.classList.remove('active'));const ab=document.getElementById('cw'+chartWindow);if(ab)ab.classList.add('active');renderCharts();},50);
+  if(name==='prophecy')renderProphecyPage();
 }
 function showModal(t,b){document.getElementById('modalTitle').textContent=t;document.getElementById('modalBody').textContent=b;document.getElementById('modal').classList.add('show');}
 function closeModal(){document.getElementById('modal').classList.remove('show');}
@@ -1161,6 +1270,38 @@ document.getElementById('charNameEl').addEventListener('click',()=>{const n=prom
 document.getElementById('journalText').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)saveJournalEntry();});
 
 // ── SETTINGS ───────────────────────────────────────────────────────────
+const TITLES=[
+  {id:'awakened',    name:'The Awakened',           desc:'Earned your first XP',                    check:s=>totalXp(s)>0},
+  {id:'seeker',      name:'The Seeker',              desc:'Completed your first quest',              check:s=>s.quests.filter(q=>q.done).length>=1},
+  {id:'devoted',     name:'The Devoted',             desc:'Logged your first habit day',             check:s=>s.habits.some(h=>Object.keys(h.days||{}).length>=1)},
+  {id:'scribe',      name:'The Scribe',              desc:'Wrote your first journal entry',          check:s=>(s.journal||[]).length>=1},
+  {id:'dreamer',     name:'The Dreamer',             desc:'Created your first reward goal',          check:s=>s.rewards.length>=1},
+  {id:'risen',       name:'The Risen',               desc:'Reached overall level 5',                 check:s=>levelFromXp(totalXp(s))>=5},
+  {id:'ascendant',   name:'The Ascendant',           desc:'Reached overall level 10',                check:s=>levelFromXp(totalXp(s))>=10},
+  {id:'legendary',   name:'The Legendary',           desc:'Reached overall level 20',                check:s=>levelFromXp(totalXp(s))>=20},
+  {id:'eternal',     name:'The Eternal',             desc:'Reached overall level 35',                check:s=>levelFromXp(totalXp(s))>=35},
+  {id:'ironclad',    name:'The Ironclad',            desc:'Reached level 5 in Vitality',             check:s=>levelFromXp(s.realms.vitality?.xp||0)>=5},
+  {id:'scholar',     name:'The Scholar',             desc:'Reached level 5 in Mastery',              check:s=>levelFromXp(s.realms.mastery?.xp||0)>=5},
+  {id:'artisan',     name:'The Artisan',             desc:'Reached level 5 in Artistry',             check:s=>levelFromXp(s.realms.artistry?.xp||0)>=5},
+  {id:'bonded',      name:'The Bonded',              desc:'Reached level 5 in Fellowship',           check:s=>levelFromXp(s.realms.fellowship?.xp||0)>=5},
+  {id:'coinkeeper',  name:'The Coin-Keeper',         desc:'Reached level 5 in Wealth',               check:s=>levelFromXp(s.realms.wealth?.xp||0)>=5},
+  {id:'sage',        name:'The Sage',                desc:'Reached level 5 in Lore',                 check:s=>levelFromXp(s.realms.lore?.xp||0)>=5},
+  {id:'hearthkeeper',name:'The Hearthkeeper',        desc:'Reached level 5 in Hearth',               check:s=>levelFromXp(s.realms.hearth?.xp||0)>=5},
+  {id:'wanderer',    name:'The Wanderer',            desc:'Reached level 5 in Reverie',              check:s=>levelFromXp(s.realms.reverie?.xp||0)>=5},
+  {id:'steadfast',   name:'The Steadfast',           desc:'Maintained a 7-day habit streak',         check:s=>s.habits.some(h=>calcStreak(h)>=7)},
+  {id:'unbroken',    name:'The Unbroken',            desc:'Maintained a 30-day habit streak',        check:s=>s.habits.some(h=>calcStreak(h)>=30)},
+  {id:'immovable',   name:'The Immovable',           desc:'Maintained a 60-day habit streak',        check:s=>s.habits.some(h=>calcStreak(h)>=60)},
+  {id:'adventurer',  name:'The Adventurer',          desc:'Completed 10 quests',                     check:s=>s.quests.filter(q=>q.done).length>=10},
+  {id:'veteran',     name:'The Veteran',             desc:'Completed 25 quests',                     check:s=>s.quests.filter(q=>q.done).length>=25},
+  {id:'dragonslayer',name:'The Dragonslayer',        desc:'Defeated your first boss battle',         check:s=>s.quests.some(q=>q.done&&q.type==='boss')},
+  {id:'chronicler',  name:'The Chronicler',          desc:'Wrote 10 journal entries',                check:s=>(s.journal||[]).length>=10},
+  {id:'archivist',   name:'The Archivist',           desc:'Wrote 30 journal entries',                check:s=>(s.journal||[]).length>=30},
+  {id:'loremaster',  name:'The Loremaster',          desc:'Wrote 60 journal entries',                check:s=>(s.journal||[]).length>=60},
+  {id:'polymath',    name:'The Polymath',            desc:'Hit the x1.3 weekly multiplier',          check:s=>polymathMult(s)>=1.3},
+  {id:'polymathAsc', name:'The Polymath Ascendant',  desc:'Hit the x2.0 weekly multiplier',          check:s=>polymathMult(s)>=2.0},
+  {id:'undying',     name:'The Undying',             desc:'Maintained a 100-day habit streak',       check:s=>s.habits.some(h=>calcStreak(h)>=100)},
+  {id:'merchantprince',name:'The Merchant Prince',  desc:'Reached level 10 in Wealth',              check:s=>levelFromXp(s.realms.wealth?.xp||0)>=10},
+];
 const CLASSES=[
   {id:'polymath', name:'⚡ Polymath',  desc:'Jack of all trades. Bonus XP for touching multiple realms in a week.'},
   {id:'scholar',  name:'📚 Scholar',   desc:'Career and knowledge focused. Bonus XP in Mastery and Lore.'},
@@ -1176,8 +1317,20 @@ function renderSettings(){
   const cp=document.getElementById('classPicker');
   if(cp)cp.innerHTML=CLASSES.map(c=>`<div class="class-opt ${(S.charClass||'polymath')===c.id?'selected':''}" onclick="pickClass('${c.id}')"><div class="class-opt-name">${c.name}</div><div class="class-opt-desc">${c.desc}</div></div>`).join('');
   const pt=document.getElementById('particleToggle');if(pt)pt.checked=S.particles!==false;
+  const tp=document.getElementById('titlePicker');
+if(tp){
+  const unlocked=S.unlockedTitles||[];
+  if(!unlocked.length){tp.innerHTML='<div style="font-size:0.82rem;color:var(--pmuted);font-style:italic;">No titles unlocked yet. Keep playing.</div>';}
+  else{tp.innerHTML=unlocked.map(id=>{const t=TITLES.find(t=>t.id===id);if(!t)return'';return`<div class="class-opt ${S.activeTitle===id?'selected':''}" style="flex:0 0 auto;" onclick="pickTitle('${id}')"><div class="class-opt-name" style="font-size:0.78rem;">${t.name}</div><div class="class-opt-desc">${t.desc}</div></div>`;}).join('');}
+}
 }
 function pickAvatar(a){S.avatar=a;save();renderSidebar();renderSettings();}
+function pickTitle(id){
+  S.activeTitle=S.activeTitle===id?null:id;
+  save();renderSettings();renderSidebar();
+  const t=TITLES.find(t=>t.id===id);
+  if(t&&S.activeTitle)showToast(`Title equipped: ${t.name}`);
+}
 function pickClass(id){
   S.charClass=id;const c=CLASSES.find(c=>c.id===id);
   save();renderSettings();renderSidebar();
@@ -1207,7 +1360,123 @@ function seed(){
   if(!S.rewards.length)S.rewards=[{id:201,title:'Apply to 10 jobs this week',treat:'Night out with friends 🍺',realmId:'wealth',target:10,count:0,claimed:false},{id:202,title:'Track diet for 7 days straight',treat:'Meal out at your favourite restaurant 🍽',realmId:'vitality',target:7,count:0,claimed:false}];
 }
 
+// ── PROPHECY ───────────────────────────────────────────────────────────
+function checkFirstBoot(){
+  if(S.prophecyDone)return; // already seen overlay (sealed or skipped)
+  // Show overlay with fade-in
+  const ov=document.getElementById('prophecyOverlay');
+  ov.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>ov.classList.add('visible')));
+}
+
+function sealProphecy(){
+  const text=document.getElementById('prophecyInput').value.trim();
+  if(!text){showToast('Write something first, Lorekeeper.');return;}
+  S.prophecy={text,writtenDate:todayStr(),sealed:true};
+  S.prophecyDone=true;
+  save();
+  // Animate seal then dismiss
+  const btn=document.getElementById('prophecySealBtn');
+  btn.textContent='🜏 Sealed';btn.disabled=true;
+  const wrap=document.querySelector('.prophecy-wrap');
+  wrap.style.transition='opacity 0.8s ease 0.4s, transform 0.8s ease 0.4s';
+  wrap.style.opacity='0';wrap.style.transform='translateY(-16px)';
+  setTimeout(()=>{
+    const ov=document.getElementById('prophecyOverlay');
+    ov.style.transition='opacity 1s ease';ov.style.opacity='0';
+    setTimeout(()=>{ov.style.display='none';},1000);
+    showToast('The prophecy is sealed. It will reveal itself in 365 days. 🜏');
+    renderProphecyPage();
+  },900);
+}
+
+function skipProphecy(){
+  save();
+  const ov=document.getElementById('prophecyOverlay');
+  ov.style.transition='opacity 0.6s ease';ov.style.opacity='0';
+  setTimeout(()=>{ov.style.display='none';},700);
+}
+
+function daysUntilReveal(){
+  if(!S.prophecy)return null;
+  const written=new Date(S.prophecy.writtenDate+'T12:00:00');
+  const reveal=new Date(written);reveal.setFullYear(reveal.getFullYear()+1);
+  const now=new Date();
+  const diff=Math.ceil((reveal-now)/(1000*60*60*24));
+  return Math.max(0,diff);
+}
+
+function renderProphecyPage(){
+  const el=document.getElementById('prophecyPageContent');
+  if(!el)return;
+  if(!S.prophecy){
+    el.innerHTML=`<div class="prophecy-no-prophecy">
+      <p style="font-size:2rem;margin-bottom:12px;">🜏</p>
+      <p>No prophecy has been written yet.</p>
+      <p style="margin-top:8px;font-size:0.85rem;">Your legend has no foretelling — write one to seal your intentions for the year ahead.</p>
+      <button class="prophecy-seal-btn" style="margin-top:20px;" onclick="showProphecyOverlay()">Write Your Prophecy</button>
+    </div>`;
+    return;
+  }
+  const days=daysUntilReveal();
+  if(days<=0){
+    // Reveal time!
+    el.innerHTML=`<div class="prophecy-sealed-card" style="cursor:pointer;" onclick="openProphecyReveal()">
+      <span class="prophecy-wax">📜</span>
+      <div class="prophecy-locked-title">The Prophecy Awaits</div>
+      <div class="prophecy-locked-date">Written on ${formatProphecyDate(S.prophecy.writtenDate)}</div>
+      <div class="prophecy-countdown" style="color:#f0c050;">Open</div>
+      <div class="prophecy-countdown-lbl">Your past self speaks — tap to read</div>
+    </div>`;
+    // Auto-trigger reveal on first visit after unlock
+    setTimeout(openProphecyReveal, 600);
+  } else {
+    el.innerHTML=`<div class="prophecy-sealed-card">
+      <span class="prophecy-wax">🜏</span>
+      <div class="prophecy-locked-title">The Prophecy Is Sealed</div>
+      <div class="prophecy-locked-date">Written on ${formatProphecyDate(S.prophecy.writtenDate)}</div>
+      <div class="prophecy-countdown">${days}</div>
+      <div class="prophecy-countdown-lbl">${days===1?'day':'days'} until it reveals</div>
+      <p style="margin-top:20px;font-size:0.82rem;color:rgba(240,221,176,0.2);font-style:italic;">"The truest prophecy is written not by oracles, but by those who dare to imagine themselves worthy."</p>
+    </div>`;
+  }
+}
+
+function formatProphecyDate(ds){
+  const d=new Date(ds+'T12:00:00');
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const ord=n=>{const s=['th','st','nd','rd'];const v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
+  return `${ord(d.getDate())} of ${months[d.getMonth()]}, ${d.getFullYear()}`;
+}
+
+function openProphecyReveal(){
+  const ov=document.getElementById('prophecyRevealOverlay');
+  document.getElementById('prophecyRevealText').textContent=S.prophecy.text;
+  document.getElementById('prophecyRevealMeta').textContent=`Sealed on ${formatProphecyDate(S.prophecy.writtenDate)} · Opened today`;
+  ov.style.display='flex';
+  // Mark as read so it doesn't auto-trigger again
+  S.prophecy.revealed=true;save();
+}
+
+function closeProphecyReveal(){
+  document.getElementById('prophecyRevealOverlay').style.display='none';
+}
+
+function showProphecyOverlay(){
+  const ov=document.getElementById('prophecyOverlay');
+  const wrap=document.querySelector('.prophecy-wrap');
+  ov.classList.remove('visible');
+  wrap.style.opacity='';wrap.style.transform='';
+  document.getElementById('prophecyInput').value='';
+  document.getElementById('prophecySealBtn').textContent='🜏 Seal the Prophecy';
+  document.getElementById('prophecySealBtn').disabled=false;
+  ov.style.display='flex';ov.style.opacity='';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>ov.classList.add('visible')));
+}
+
 load();seed();spawnParticles();if(S.particles===false)document.getElementById('particles').style.display='none';render();
+// Check first boot after render so app is ready
+setTimeout(checkFirstBoot,100);
 </script>
 </body>
 </html>
