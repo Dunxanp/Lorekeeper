@@ -62,6 +62,14 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 40% at 50
 .char-name{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold-l);cursor:pointer;text-align:center;text-shadow:0 0 10px rgba(240,192,80,0.2);}
 .char-name:hover{text-decoration:underline;}
 .class-badge{font-size:0.68rem;letter-spacing:2px;background:rgba(201,146,42,0.08);border:1px solid rgba(201,146,42,0.25);border-radius:20px;padding:3px 13px;color:var(--gold);}.title-badge{font-size:0.65rem;letter-spacing:1px;color:rgba(240,221,176,0.4);font-style:italic;margin-top:2px;}
+.memory-fragment{position:fixed;bottom:28px;right:28px;width:320px;background:linear-gradient(160deg,#1e1508,#130e05);border:1px solid rgba(201,146,42,0.2);border-radius:4px;padding:22px 24px;z-index:800;box-shadow:0 8px 40px rgba(0,0,0,0.7);opacity:0;transform:translateY(12px);transition:opacity 0.8s ease,transform 0.8s ease;pointer-events:none;}
+.memory-fragment.visible{opacity:1;transform:translateY(0);pointer-events:all;}
+.memory-fragment-eyebrow{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:3px;color:rgba(201,146,42,0.4);text-transform:uppercase;margin-bottom:10px;}
+.memory-fragment-date{font-size:0.75rem;color:rgba(240,221,176,0.3);font-style:italic;margin-bottom:10px;}
+.memory-fragment-realm{display:inline-block;font-size:0.65rem;letter-spacing:1px;padding:2px 8px;border-radius:10px;border:1px solid rgba(201,146,42,0.15);color:rgba(201,146,42,0.5);margin-bottom:12px;}
+.memory-fragment-text{font-size:0.88rem;color:rgba(240,221,176,0.45);line-height:1.7;max-height:120px;overflow:hidden;mask-image:linear-gradient(180deg,rgba(240,221,176,0.45) 60%,transparent);-webkit-mask-image:linear-gradient(180deg,rgba(240,221,176,0.45) 60%,transparent);}
+.memory-fragment-dismiss{margin-top:14px;background:none;border:none;font-family:'Crimson Pro',serif;font-style:italic;font-size:0.8rem;color:rgba(201,146,42,0.35);cursor:pointer;padding:0;transition:color 0.2s;}
+.memory-fragment-dismiss:hover{color:rgba(201,146,42,0.7);}
 .bar-wrap{width:100%;}
 .bar-lbl{display:flex;justify-content:space-between;font-size:0.73rem;color:var(--pmuted);margin-bottom:4px;}
 .bar-track{height:8px;background:rgba(0,0,0,0.5);border-radius:2px;border:1px solid rgba(201,146,42,0.12);overflow:hidden;}
@@ -658,6 +666,14 @@ select option{background:#1a0f05;}
   </div>
 
 </main>
+</div>
+<!-- Memory Fragment -->
+<div class="memory-fragment" id="memoryFragment">
+  <div class="memory-fragment-eyebrow">✦ A memory stirs... ✦</div>
+  <div class="memory-fragment-date" id="memoryDate"></div>
+  <div class="memory-fragment-realm" id="memoryRealm"></div>
+  <div class="memory-fragment-text" id="memoryText"></div>
+  <button class="memory-fragment-dismiss" onclick="dismissMemory()">Return to the present</button>
 </div>
 
 <!-- Prophecy First-Boot Overlay -->
@@ -1361,6 +1377,27 @@ function seed(){
 }
 
 // ── PROPHECY ───────────────────────────────────────────────────────────
+function checkMemoryFragment(){
+  const today=todayStr();
+  if(S.lastMemoryDate===today)return;
+  if(!S.journal||!S.journal.length)return;
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);
+  const old=S.journal.filter(e=>{const d=new Date(e.date+'T12:00:00');return d<=cutoff;});
+  if(!old.length)return;
+  const entry=old[Math.floor(Math.random()*old.length)];
+  const realm=REALMS.find(r=>r.id===entry.realmId);
+  document.getElementById('memoryDate').textContent=entry.date;
+  document.getElementById('memoryRealm').textContent=realm?`${realm.icon} ${realm.name}`:'General';
+  document.getElementById('memoryText').textContent=entry.text;
+  S.lastMemoryDate=today;save();
+  setTimeout(()=>{
+    const el=document.getElementById('memoryFragment');
+    el.classList.add('visible');
+  },2000);
+}
+function dismissMemory(){
+  document.getElementById('memoryFragment').classList.remove('visible');
+}
 function checkFirstBoot(){
   if(S.prophecyDone)return; // already seen overlay (sealed or skipped)
   // Show overlay with fade-in
@@ -1477,6 +1514,7 @@ function showProphecyOverlay(){
 load();seed();spawnParticles();if(S.particles===false)document.getElementById('particles').style.display='none';render();
 // Check first boot after render so app is ready
 setTimeout(checkFirstBoot,100);
+setTimeout(checkMemoryFragment,2500);
 </script>
 </body>
 </html>
