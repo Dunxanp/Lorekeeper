@@ -10,327 +10,157 @@
   --bg: #0a0804;
   --gold: #c9922a;
   --gold-l: #f0c050;
-  --gold-glow: rgba(240,192,80,0.2);
   --parchment: #f0ddb0;
   --pdim: rgba(240,221,176,0.55);
   --pmuted: rgba(240,221,176,0.28);
-  --fog: rgba(8,5,2,0.82);
-  --fog-deep: rgba(4,3,1,0.93);
 }
-
 * { margin:0; padding:0; box-sizing:border-box; }
-
 body {
   background: var(--bg);
   font-family: 'Crimson Pro', Georgia, serif;
   color: var(--parchment);
   min-height: 100vh;
   overflow-x: hidden;
-  cursor: default;
 }
 
 /* ── HEADER ── */
 .map-header {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
   padding: 14px 28px;
   background: linear-gradient(180deg, rgba(10,8,4,0.97) 0%, transparent 100%);
   border-bottom: 1px solid rgba(201,146,42,0.12);
 }
-.map-header-title {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 0.85rem;
-  color: var(--gold-l);
-  letter-spacing: 3px;
-  text-shadow: 0 0 20px rgba(240,192,80,0.3);
-}
-.map-header-sub {
-  font-size: 0.75rem;
-  color: var(--pmuted);
-  font-style: italic;
-  margin-top: 2px;
-}
+.map-header-title { font-family:'Cinzel Decorative',serif; font-size:0.85rem; color:var(--gold-l); letter-spacing:3px; text-shadow:0 0 20px rgba(240,192,80,0.3); }
+.map-header-sub { font-size:0.75rem; color:var(--pmuted); font-style:italic; margin-top:2px; }
+.player-info { text-align:center; }
+.player-level { font-family:'Cinzel',serif; font-size:0.85rem; color:var(--gold); letter-spacing:1px; }
+.player-name { font-size:0.8rem; color:var(--pdim); font-style:italic; margin-top:2px; }
 .back-btn {
-  font-family: 'Cinzel', serif;
-  font-size: 0.72rem;
-  letter-spacing: 2px;
-  color: rgba(201,146,42,0.6);
-  background: none;
-  border: 1px solid rgba(201,146,42,0.2);
-  padding: 7px 16px;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-  display: inline-block;
+  padding:8px 18px; border:1px solid rgba(201,146,42,0.3); border-radius:4px;
+  color:var(--gold); font-family:'Cinzel',serif; font-size:0.75rem; letter-spacing:1px;
+  text-decoration:none; transition:all 0.2s; background:rgba(0,0,0,0.4);
 }
-.back-btn:hover { color: var(--gold-l); border-color: rgba(201,146,42,0.5); background: rgba(201,146,42,0.05); }
+.back-btn:hover { background:rgba(201,146,42,0.1); border-color:var(--gold); }
 
-.player-info {
-  text-align: right;
-}
-.player-level {
-  font-family: 'Cinzel', serif;
-  font-size: 0.8rem;
-  color: var(--gold);
-}
-.player-name {
-  font-size: 0.72rem;
-  color: var(--pmuted);
-  font-style: italic;
-}
+/* ── STARS ── */
+.stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
+.star { position:absolute; border-radius:50%; background:#fff; animation:twinkle ease-in-out infinite; }
+@keyframes twinkle { 0%,100%{opacity:0.2;} 50%{opacity:0.8;} }
 
 /* ── MAP CONTAINER ── */
 .map-outer {
   padding-top: 70px;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-bottom: 60px;
+  display:flex; justify-content:center; align-items:flex-start;
+  padding-bottom: 80px;
+  position: relative; z-index:1;
 }
+.map-canvas { position:relative; width:700px; max-width:100vw; }
+.map-svg { width:100%; height:auto; display:block; }
 
-.map-canvas {
-  position: relative;
-  width: 700px;
-  max-width: 100vw;
+/* ── ZONE GROUPS — dim by default, lit when unlocked ── */
+.zone-group {
+  transition: opacity 0.8s ease, filter 0.8s ease;
 }
-
-/* ── SVG MAP ── */
-.map-svg {
-  width: 100%;
-  height: auto;
-  display: block;
+.zone-group.locked, .zone-group.unlocked,
+.zone-group.beyond-wall, .zone-group.beyond-wall.unlocked {
+  opacity: 1;
+  filter: none;
 }
 
 /* ── ZONE LABELS ── */
-.zone-labels {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
+.zone-labels { position:absolute; inset:0; pointer-events:none; }
 .zone-label {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  pointer-events: all;
-  cursor: default;
-  transition: opacity 0.4s;
+  position:absolute; transform:translate(-50%,-50%);
+  text-align:center; pointer-events:all; cursor:default;
+  transition: opacity 0.6s ease;
 }
 .zone-label-name {
-  font-family: 'Cinzel', serif;
-  font-size: 0.72rem;
-  letter-spacing: 2px;
-  color: var(--gold-l);
-  text-shadow: 0 0 12px rgba(240,192,80,0.5), 0 1px 3px rgba(0,0,0,0.8);
-  white-space: nowrap;
-  text-transform: uppercase;
-}
-.zone-label-name.fogged {
-  color: rgba(240,221,176,0.15);
-  text-shadow: none;
+  font-family:'Cinzel',serif; font-size:0.72rem; letter-spacing:2px;
+  color: var(--gold-l); text-shadow:0 0 12px rgba(240,192,80,0.4);
+  white-space:nowrap;
 }
 .zone-label-sub {
-  font-size: 0.62rem;
-  color: var(--pmuted);
-  font-style: italic;
-  margin-top: 2px;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
-}
-.zone-label-sub.fogged {
-  color: rgba(240,221,176,0.08);
+  font-size:0.6rem; color:var(--pmuted); letter-spacing:1px;
+  margin-top:2px; font-style:italic;
 }
 
 /* ── PLAYER MARKER ── */
 .player-marker {
-  position: absolute;
-  transform: translate(-50%, -100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  z-index: 50;
-  filter: drop-shadow(0 0 8px rgba(240,192,80,0.8));
-  animation: markerFloat 3s ease-in-out infinite;
-  pointer-events: none;
+  position:absolute; transform:translate(-50%,-50%);
+  z-index:20; pointer-events:none;
+  transition: top 1.2s cubic-bezier(0.22,0.61,0.36,1), left 1.2s cubic-bezier(0.22,0.61,0.36,1);
 }
-@keyframes markerFloat {
-  0%,100% { transform: translate(-50%, -100%) translateY(0); }
-  50% { transform: translate(-50%, -100%) translateY(-5px); }
-}
-.marker-figure {
-  font-size: 1.6rem;
-  line-height: 1;
-}
-.marker-pin {
-  width: 2px;
-  height: 12px;
-  background: linear-gradient(180deg, var(--gold), transparent);
-  border-radius: 1px;
-}
-.marker-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--gold-l);
-  box-shadow: 0 0 8px rgba(240,192,80,0.8), 0 0 20px rgba(240,192,80,0.4);
-  animation: dotPulse 2s ease-in-out infinite;
-}
-@keyframes dotPulse {
-  0%,100% { box-shadow: 0 0 8px rgba(240,192,80,0.8), 0 0 20px rgba(240,192,80,0.4); }
-  50% { box-shadow: 0 0 14px rgba(240,192,80,1), 0 0 35px rgba(240,192,80,0.6); }
-}
+.marker-figure { font-size:1.6rem; display:block; text-align:center; filter:drop-shadow(0 0 8px rgba(240,192,80,0.6)); animation:markerFloat 3s ease-in-out infinite; }
+@keyframes markerFloat { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
+.marker-pin { width:2px; height:14px; background:linear-gradient(180deg,rgba(240,192,80,0.8),transparent); margin:0 auto; }
+.marker-dot { width:6px; height:6px; background:var(--gold-l); border-radius:50%; margin:0 auto; box-shadow:0 0 8px rgba(240,192,80,0.8); animation:dotPulse 2s ease-in-out infinite; }
+@keyframes dotPulse { 0%,100%{box-shadow:0 0 4px rgba(240,192,80,0.6);} 50%{box-shadow:0 0 14px rgba(240,192,80,1), 0 0 24px rgba(240,192,80,0.4);} }
 
-/* ── FOG OVERLAY ── */
-.fog-zone {
-  position: absolute;
-  pointer-events: none;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.fog-zone.clearing { animation: fogClear 2s ease forwards; }
-@keyframes fogClear { to { opacity: 0; } }
-
-.fog-particles {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-.fog-wisp {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(20,14,6,0.7) 0%, transparent 70%);
-  animation: wispDrift linear infinite;
-}
-@keyframes wispDrift {
-  0% { transform: translateX(-20%) translateY(10%); opacity: 0.6; }
-  50% { opacity: 0.9; }
-  100% { transform: translateX(120%) translateY(-15%); opacity: 0.6; }
-}
+/* ── UNLOCK PULSE (newly unlocked zone) ── */
+@keyframes unlockPulse { 0%{opacity:0;transform:scale(0.8);} 50%{opacity:0.3;} 100%{opacity:0;transform:scale(1.4);} }
 
 /* ── TOOLTIP ── */
 .zone-tooltip {
-  position: fixed;
-  background: linear-gradient(160deg, #2a1d0e, #1a1008);
-  border: 1px solid rgba(201,146,42,0.35);
-  border-radius: 4px;
-  padding: 14px 18px;
-  max-width: 240px;
-  z-index: 200;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+  position:fixed; z-index:200; pointer-events:none;
+  background:linear-gradient(135deg,rgba(30,21,10,0.97),rgba(14,11,5,0.97));
+  border:1px solid rgba(201,146,42,0.3); border-radius:6px;
+  padding:12px 16px; max-width:240px;
+  opacity:0; transition:opacity 0.15s;
 }
-.zone-tooltip.visible { opacity: 1; }
-.tooltip-name {
-  font-family: 'Cinzel', serif;
-  font-size: 0.78rem;
-  color: var(--gold-l);
-  letter-spacing: 1px;
-  margin-bottom: 5px;
-}
-.tooltip-desc {
-  font-size: 0.82rem;
-  color: var(--pdim);
-  line-height: 1.6;
-  font-style: italic;
-}
-.tooltip-status {
-  margin-top: 8px;
-  font-size: 0.7rem;
-  color: rgba(201,146,42,0.6);
-  letter-spacing: 1px;
-  font-family: 'Cinzel', serif;
-}
+.zone-tooltip.visible { opacity:1; }
+.tooltip-name { font-family:'Cinzel',serif; font-size:0.82rem; color:var(--gold-l); margin-bottom:4px; }
+.tooltip-desc { font-size:0.8rem; color:var(--pdim); line-height:1.5; margin-bottom:6px; }
+.tooltip-status { font-size:0.72rem; color:var(--gold); font-family:'Cinzel',serif; letter-spacing:1px; }
+.tooltip-status.locked-status { color:rgba(240,221,176,0.35); }
 
-/* ── LEGEND ── */
+/* ── LEGEND & SCROLL HINT ── */
 .map-legend {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: rgba(10,8,4,0.88);
-  border: 1px solid rgba(201,146,42,0.15);
-  border-radius: 30px;
-  padding: 8px 22px;
-  font-size: 0.68rem;
-  color: var(--pmuted);
-  letter-spacing: 1px;
-  font-family: 'Cinzel', serif;
-  backdrop-filter: blur(8px);
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  display:flex; gap:20px; background:rgba(10,8,4,0.85);
+  border:1px solid rgba(201,146,42,0.15); border-radius:20px;
+  padding:8px 20px; z-index:100;
 }
-.legend-item { display: flex; align-items: center; gap: 6px; }
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-.legend-dot.unlocked { background: var(--gold); box-shadow: 0 0 6px rgba(240,192,80,0.5); }
-.legend-dot.locked { background: rgba(240,221,176,0.15); }
-.legend-dot.current { background: var(--gold-l); box-shadow: 0 0 8px rgba(240,192,80,0.8); animation: dotPulse 2s infinite; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:0.72rem; color:var(--pmuted); font-family:'Cinzel',serif; letter-spacing:1px; }
+.legend-dot { width:8px; height:8px; border-radius:50%; }
+.legend-dot.current { background:var(--gold-l); box-shadow:0 0 6px var(--gold); }
+.legend-dot.unlocked { background:rgba(201,146,42,0.6); }
+.legend-dot.locked { background:rgba(240,221,176,0.15); border:1px solid rgba(240,221,176,0.2); }
+.scroll-hint { position:fixed; bottom:56px; left:50%; transform:translateX(-50%); font-size:0.62rem; color:rgba(240,221,176,0.2); letter-spacing:3px; font-family:'Cinzel',serif; }
 
-/* ── SCROLL HINT ── */
-.scroll-hint {
-  position: fixed;
-  bottom: 70px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.65rem;
-  color: rgba(240,221,176,0.2);
-  letter-spacing: 2px;
-  font-family: 'Cinzel', serif;
-  animation: hintFade 3s ease 2s forwards;
-  opacity: 0;
+/* ── CURRENT ZONE BANNER ── */
+.zone-banner {
+  position:fixed; top:70px; left:50%; transform:translateX(-50%);
+  z-index:90; text-align:center; pointer-events:none;
+  opacity:0; transition:opacity 0.6s;
 }
-@keyframes hintFade {
-  0% { opacity:0; } 20% { opacity:1; } 80% { opacity:1; } 100% { opacity:0; }
-}
-
-/* Stars background */
-.stars {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-.star {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  background: rgba(240,221,176,0.4);
-  border-radius: 50%;
-  animation: starTwinkle linear infinite;
-}
-@keyframes starTwinkle {
-  0%,100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-
-.map-outer { position: relative; z-index: 1; }
+.zone-banner.visible { opacity:1; }
+.zone-banner-name { font-family:'Cinzel Decorative',serif; font-size:0.9rem; color:var(--gold-l); letter-spacing:2px; text-shadow:0 0 20px rgba(240,192,80,0.4); }
+.zone-banner-sub { font-size:0.72rem; color:var(--pmuted); font-style:italic; margin-top:3px; }
 </style>
 </head>
 <body>
 
-<!-- Stars -->
 <div class="stars" id="stars"></div>
 
 <!-- Header -->
 <div class="map-header">
   <div>
-    <div class="map-header-title">The Legend Map</div>
+    <div class="map-header-title">THE LEGEND MAP</div>
     <div class="map-header-sub">Your journey, charted.</div>
   </div>
   <div class="player-info">
-    <div class="player-level" id="headerLevel">Level 1</div>
+    <div class="player-level" id="headerLevel">Level 1 · Cap 50</div>
     <div class="player-name" id="headerName">Lorekeeper</div>
   </div>
   <a href="index.html" class="back-btn">← Return</a>
+</div>
+
+<!-- Zone banner (shows current zone name on load) -->
+<div class="zone-banner" id="zoneBanner">
+  <div class="zone-banner-name" id="zoneBannerName"></div>
+  <div class="zone-banner-sub" id="zoneBannerSub"></div>
 </div>
 
 <!-- Tooltip -->
@@ -344,16 +174,8 @@ body {
 <div class="map-outer">
   <div class="map-canvas" id="mapCanvas">
 
-    <!-- The SVG map illustration -->
     <svg class="map-svg" viewBox="0 0 700 1400" xmlns="http://www.w3.org/2000/svg" id="mapSvg">
       <defs>
-        <!-- Parchment base texture -->
-        <filter id="paper">
-          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
-          <feColorMatrix type="saturate" values="0"/>
-          <feBlend in="SourceGraphic" mode="multiply"/>
-        </filter>
-        <!-- Glow filter -->
         <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="3" result="blur"/>
           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
@@ -362,459 +184,298 @@ body {
           <feGaussianBlur stdDeviation="6" result="blur"/>
           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
-        <!-- Fog gradient -->
-        <radialGradient id="fogGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#0a0804" stop-opacity="0.95"/>
-          <stop offset="100%" stop-color="#060503" stop-opacity="0.88"/>
-        </radialGradient>
-        <!-- Gold gradient -->
         <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#c9922a"/>
-          <stop offset="100%" stop-color="#f0c050"/>
+          <stop offset="0%" stop-color="#c9922a"/><stop offset="100%" stop-color="#f0c050"/>
         </linearGradient>
-        <!-- Path gradient -->
         <linearGradient id="pathGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-          <stop offset="0%" stop-color="#c9922a" stop-opacity="0.8"/>
-          <stop offset="100%" stop-color="#f0c050" stop-opacity="0.3"/>
+          <stop offset="0%" stop-color="#c9922a" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#f0c050" stop-opacity="0.4"/>
         </linearGradient>
-        <!-- Mountain gradient -->
-        <linearGradient id="mtGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#e8d090"/>
-          <stop offset="60%" stop-color="#8b6914"/>
-          <stop offset="100%" stop-color="#3d2a0a"/>
-        </linearGradient>
-        <!-- Snow gradient -->
-        <linearGradient id="snowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#f0e8d0"/>
-          <stop offset="100%" stop-color="#c9b87a"/>
-        </linearGradient>
-        <!-- Fog deep gradient -->
-        <linearGradient id="deepFogGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-          <stop offset="0%" stop-color="#04030a" stop-opacity="0.97"/>
-          <stop offset="100%" stop-color="#080614" stop-opacity="0.92"/>
-        </linearGradient>
-        <clipPath id="mapClip">
-          <rect width="700" height="1400"/>
-        </clipPath>
+        <clipPath id="mapClip"><rect width="700" height="1400"/></clipPath>
       </defs>
 
       <g clip-path="url(#mapClip)">
 
-      <!-- ── BACKGROUND ── -->
-      <!-- Deep sky at top -->
+      <!-- Background -->
       <rect width="700" height="1400" fill="#080604"/>
-      <!-- Ground atmosphere -->
-      <rect width="700" height="400" y="1000" fill="url(#paperBg)" opacity="0.3"/>
-
-      <!-- Subtle grid/map lines -->
       <g opacity="0.04" stroke="#c9922a" stroke-width="0.5">
-        <line x1="0" y1="200" x2="700" y2="200"/>
-        <line x1="0" y1="400" x2="700" y2="400"/>
-        <line x1="0" y1="600" x2="700" y2="600"/>
-        <line x1="0" y1="800" x2="700" y2="800"/>
-        <line x1="0" y1="1000" x2="700" y2="1000"/>
-        <line x1="0" y1="1200" x2="700" y2="1200"/>
-        <line x1="175" y1="0" x2="175" y2="1400"/>
-        <line x1="350" y1="0" x2="350" y2="1400"/>
-        <line x1="525" y1="0" x2="525" y2="1400"/>
+        <line x1="0" y1="200" x2="700" y2="200"/><line x1="0" y1="400" x2="700" y2="400"/>
+        <line x1="0" y1="600" x2="700" y2="600"/><line x1="0" y1="800" x2="700" y2="800"/>
+        <line x1="0" y1="1000" x2="700" y2="1000"/><line x1="0" y1="1200" x2="700" y2="1200"/>
+        <line x1="175" y1="0" x2="175" y2="1400"/><line x1="350" y1="0" x2="350" y2="1400"/><line x1="525" y1="0" x2="525" y2="1400"/>
       </g>
 
-      <!-- ── THE MAIN PATH (journey road) ── -->
+      <!-- Journey path — always visible, dims above current zone -->
+      <path id="pathMain" d="M350 1340 C350 1300 340 1260 350 1220 C360 1180 370 1140 350 1100 C330 1060 310 1020 350 980 C390 940 420 900 350 860 C280 820 260 780 350 740 C440 700 460 660 350 620 C240 580 220 540 350 500 C480 460 500 420 350 380 C200 340 180 300 350 260 C440 240 460 200 350 160 C290 140 280 100 350 70"
+        stroke="url(#pathGrad)" stroke-width="3" fill="none" stroke-dasharray="8,5" opacity="0.7"/>
       <path d="M350 1340 C350 1300 340 1260 350 1220 C360 1180 370 1140 350 1100 C330 1060 310 1020 350 980 C390 940 420 900 350 860 C280 820 260 780 350 740 C440 700 460 660 350 620 C240 580 220 540 350 500 C480 460 500 420 350 380 C200 340 180 300 350 260 C440 240 460 200 350 160 C290 140 280 100 350 70"
-        stroke="url(#pathGrad)" stroke-width="3" fill="none" stroke-dasharray="8,5" opacity="0.6"/>
+        stroke="rgba(240,192,80,0.12)" stroke-width="10" fill="none" filter="url(#glow)"/>
 
-      <!-- Path glow -->
-      <path d="M350 1340 C350 1300 340 1260 350 1220 C360 1180 370 1140 350 1100 C330 1060 310 1020 350 980 C390 940 420 900 350 860 C280 820 260 780 350 740 C440 700 460 660 350 620 C240 580 220 540 350 500 C480 460 500 420 350 380 C200 340 180 300 350 260 C440 240 460 200 350 160 C290 140 280 100 350 70"
-        stroke="rgba(240,192,80,0.15)" stroke-width="8" fill="none" filter="url(#glow)"/>
-
-      <!-- ══════════════════════════════════════════ -->
-      <!-- ZONE 1: NEW VALE (bottom, always lit) -->
-      <!-- ══════════════════════════════════════════ -->
-      <!-- Rolling hills base -->
-      <ellipse cx="350" cy="1320" rx="280" ry="80" fill="#1a1208" opacity="0.8"/>
-      <ellipse cx="200" cy="1300" rx="160" ry="50" fill="#221808" opacity="0.6"/>
-      <ellipse cx="500" cy="1310" rx="150" ry="45" fill="#1e1508" opacity="0.6"/>
-
-      <!-- Vale grass hills -->
-      <path d="M70 1360 Q150 1300 230 1320 Q310 1340 350 1300 Q390 1260 470 1290 Q550 1320 630 1300 L630 1400 L70 1400 Z" fill="#1a2010" opacity="0.7"/>
-      <path d="M100 1380 Q200 1330 300 1350 Q400 1370 500 1340 Q580 1320 640 1350 L640 1400 L100 1400 Z" fill="#161c0c" opacity="0.5"/>
-
-      <!-- Small trees/bushes in the vale -->
-      <g fill="#2d3d18" opacity="0.7">
-        <ellipse cx="150" cy="1320" rx="18" ry="22"/>
-        <ellipse cx="175" cy="1315" rx="14" ry="18"/>
-        <ellipse cx="540" cy="1325" rx="16" ry="20"/>
-        <ellipse cx="565" cy="1318" rx="12" ry="16"/>
-        <ellipse cx="240" cy="1330" rx="10" ry="14"/>
-        <ellipse cx="460" cy="1330" rx="11" ry="15"/>
-      </g>
-      <!-- Tree trunks -->
-      <g fill="#3d2a10" opacity="0.6">
-        <rect x="148" y="1338" width="4" height="12"/>
-        <rect x="538" y="1342" width="4" height="10"/>
+      <!-- ═══════════════════════════════════ -->
+      <!-- ZONE 1: NEW VALE — always unlocked -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group unlocked" id="zone-vale">
+        <ellipse cx="350" cy="1320" rx="280" ry="80" fill="#1a1208" opacity="0.8"/>
+        <ellipse cx="200" cy="1300" rx="160" ry="50" fill="#221808" opacity="0.6"/>
+        <ellipse cx="500" cy="1310" rx="150" ry="45" fill="#1e1508" opacity="0.6"/>
+        <path d="M70 1360 Q150 1300 230 1320 Q310 1340 350 1300 Q390 1260 470 1290 Q550 1320 630 1300 L630 1400 L70 1400 Z" fill="#1a2010" opacity="0.7"/>
+        <path d="M100 1380 Q200 1330 300 1350 Q400 1370 500 1340 Q580 1320 640 1350 L640 1400 L100 1400 Z" fill="#161c0c" opacity="0.5"/>
+        <g fill="#2d3d18" opacity="0.7">
+          <ellipse cx="150" cy="1320" rx="18" ry="22"/><ellipse cx="175" cy="1315" rx="14" ry="18"/>
+          <ellipse cx="540" cy="1325" rx="16" ry="20"/><ellipse cx="565" cy="1318" rx="12" ry="16"/>
+          <ellipse cx="240" cy="1330" rx="10" ry="14"/><ellipse cx="460" cy="1330" rx="11" ry="15"/>
+        </g>
+        <g fill="#3d2a10" opacity="0.6">
+          <rect x="148" y="1338" width="4" height="12"/><rect x="538" y="1342" width="4" height="10"/>
+        </g>
+        <ellipse cx="350" cy="1330" rx="200" ry="60" fill="rgba(201,146,42,0.06)" filter="url(#glow)"/>
+        <g filter="url(#glow)">
+          <rect x="295" y="1280" width="6" height="30" fill="#8b6914" rx="2"/>
+          <rect x="399" y="1280" width="6" height="30" fill="#8b6914" rx="2"/>
+          <ellipse cx="298" cy="1278" rx="5" ry="7" fill="#f0c050" opacity="0.9"/>
+          <ellipse cx="402" cy="1278" rx="5" ry="7" fill="#f0c050" opacity="0.9"/>
+          <ellipse cx="298" cy="1276" rx="8" ry="10" fill="rgba(240,192,80,0.35)"/>
+          <ellipse cx="402" cy="1276" rx="8" ry="10" fill="rgba(240,192,80,0.35)"/>
+        </g>
       </g>
 
-      <!-- Vale glow (warm, welcoming) -->
-      <ellipse cx="350" cy="1330" rx="200" ry="60" fill="rgba(201,146,42,0.04)" filter="url(#glow)"/>
-
-      <!-- Starting torch posts -->
-      <g filter="url(#glow)">
-        <rect x="295" y="1280" width="6" height="30" fill="#8b6914" rx="2"/>
-        <rect x="399" y="1280" width="6" height="30" fill="#8b6914" rx="2"/>
-        <ellipse cx="298" cy="1278" rx="5" ry="7" fill="#f0c050" opacity="0.9"/>
-        <ellipse cx="402" cy="1278" rx="5" ry="7" fill="#f0c050" opacity="0.9"/>
-        <ellipse cx="298" cy="1276" rx="8" ry="10" fill="rgba(240,192,80,0.3)"/>
-        <ellipse cx="402" cy="1276" rx="8" ry="10" fill="rgba(240,192,80,0.3)"/>
+      <!-- ═══════════════════════════════════ -->
+      <!-- ZONE 2: THE ENLIGHTENING FORESTS   -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group locked" id="zone-forests">
+        <rect x="0" y="1100" width="700" height="200" fill="#0e1208" opacity="0.6"/>
+        <g opacity="0.85">
+          <ellipse cx="80" cy="1160" rx="55" ry="70" fill="#1a2a10"/>
+          <ellipse cx="60" cy="1140" rx="40" ry="55" fill="#213515"/>
+          <ellipse cx="100" cy="1150" rx="45" ry="60" fill="#1e3012"/>
+          <ellipse cx="40" cy="1170" rx="35" ry="45" fill="#172510"/>
+        </g>
+        <g opacity="0.85">
+          <ellipse cx="620" cy="1165" rx="55" ry="65" fill="#1a2a10"/>
+          <ellipse cx="645" cy="1145" rx="40" ry="50" fill="#213515"/>
+          <ellipse cx="600" cy="1155" rx="45" ry="58" fill="#1e3012"/>
+          <ellipse cx="660" cy="1175" rx="35" ry="42" fill="#172510"/>
+        </g>
+        <g opacity="0.6">
+          <ellipse cx="180" cy="1180" rx="35" ry="50" fill="#182210"/>
+          <ellipse cx="520" cy="1175" rx="38" ry="52" fill="#182210"/>
+          <ellipse cx="270" cy="1190" rx="28" ry="40" fill="#1a2510"/>
+          <ellipse cx="430" cy="1185" rx="30" ry="42" fill="#1a2510"/>
+        </g>
+        <g filter="url(#glow)" opacity="0.6">
+          <circle cx="130" cy="1170" r="3" fill="#78d490"/><circle cx="580" cy="1165" r="3" fill="#78d490"/>
+          <circle cx="220" cy="1185" r="2" fill="#a8f4b8"/><circle cx="490" cy="1180" r="2" fill="#a8f4b8"/>
+          <circle cx="160" cy="1195" r="2" fill="#78d490"/><circle cx="550" cy="1190" r="2" fill="#78d490"/>
+        </g>
+        <g fill="#2a1d0e" stroke="rgba(201,146,42,0.3)" stroke-width="1">
+          <rect x="315" y="1160" width="14" height="50" rx="2"/>
+          <rect x="371" y="1160" width="14" height="50" rx="2"/>
+          <path d="M315 1165 Q350 1140 385 1165" fill="#2a1d0e" stroke="rgba(201,146,42,0.4)" stroke-width="1.5"/>
+        </g>
+        <path d="M320 1163 Q350 1143 380 1163" stroke="rgba(201,146,42,0.25)" stroke-width="3" fill="none" filter="url(#glow)"/>
       </g>
 
-      <!-- ══════════════════════════════════════════ -->
-      <!-- ZONE 2: THE ENLIGHTENING FORESTS -->
-      <!-- ══════════════════════════════════════════ -->
-      <!-- Forest ground -->
-      <rect x="0" y="1100" width="700" height="200" fill="#0e1208" opacity="0.6"/>
-
-      <!-- Dense forest canopy left -->
-      <g opacity="0.85">
-        <ellipse cx="80" cy="1160" rx="55" ry="70" fill="#1a2a10"/>
-        <ellipse cx="60" cy="1140" rx="40" ry="55" fill="#213515"/>
-        <ellipse cx="100" cy="1150" rx="45" ry="60" fill="#1e3012"/>
-        <ellipse cx="40" cy="1170" rx="35" ry="45" fill="#172510"/>
-      </g>
-      <!-- Forest canopy right -->
-      <g opacity="0.85">
-        <ellipse cx="620" cy="1165" rx="55" ry="65" fill="#1a2a10"/>
-        <ellipse cx="645" cy="1145" rx="40" ry="50" fill="#213515"/>
-        <ellipse cx="600" cy="1155" rx="45" ry="58" fill="#1e3012"/>
-        <ellipse cx="660" cy="1175" rx="35" ry="42" fill="#172510"/>
-      </g>
-      <!-- Forest mid trees -->
-      <g opacity="0.6">
-        <ellipse cx="180" cy="1180" rx="35" ry="50" fill="#182210"/>
-        <ellipse cx="520" cy="1175" rx="38" ry="52" fill="#182210"/>
-        <ellipse cx="270" cy="1190" rx="28" ry="40" fill="#1a2510"/>
-        <ellipse cx="430" cy="1185" rx="30" ry="42" fill="#1a2510"/>
+      <!-- ═══════════════════════════════════ -->
+      <!-- ZONE 3: THE AWAKENING (Arc 1)      -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group locked" id="zone-awakening">
+        <rect x="0" y="900" width="700" height="200" fill="#100c06" opacity="0.7"/>
+        <path d="M0 980 Q100 940 200 960 Q300 980 350 950 Q400 920 500 945 Q600 970 700 955 L700 1100 L0 1100 Z" fill="#1a1208" opacity="0.6"/>
+        <g fill="#2a2010" stroke="rgba(201,146,42,0.2)" stroke-width="0.5">
+          <rect x="180" y="940" width="12" height="45" rx="2" transform="rotate(-3 186 962)"/>
+          <rect x="210" y="950" width="10" height="38" rx="2" transform="rotate(2 215 969)"/>
+          <rect x="235" y="945" width="11" height="42" rx="2"/>
+          <rect x="455" y="942" width="12" height="44" rx="2" transform="rotate(2 461 964)"/>
+          <rect x="480" y="948" width="10" height="40" rx="2" transform="rotate(-2 485 968)"/>
+          <rect x="505" y="944" width="11" height="43" rx="2"/>
+        </g>
+        <ellipse cx="210" cy="985" rx="45" ry="12" fill="rgba(201,146,42,0.08)" filter="url(#glow)"/>
+        <ellipse cx="480" cy="985" rx="45" ry="12" fill="rgba(201,146,42,0.08)" filter="url(#glow)"/>
+        <ellipse cx="350" cy="960" rx="120" ry="40" fill="rgba(201,146,42,0.06)" filter="url(#strongGlow)"/>
+        <circle cx="350" cy="975" r="30" fill="none" stroke="rgba(201,146,42,0.2)" stroke-width="1" stroke-dasharray="4,4"/>
+        <circle cx="350" cy="975" r="20" fill="none" stroke="rgba(201,146,42,0.12)" stroke-width="0.5"/>
       </g>
 
-      <!-- Mystical forest lights -->
-      <g filter="url(#glow)" opacity="0.5">
-        <circle cx="130" cy="1170" r="3" fill="#78d490"/>
-        <circle cx="580" cy="1165" r="3" fill="#78d490"/>
-        <circle cx="220" cy="1185" r="2" fill="#a8f4b8"/>
-        <circle cx="490" cy="1180" r="2" fill="#a8f4b8"/>
-        <circle cx="160" cy="1195" r="2" fill="#78d490"/>
-        <circle cx="550" cy="1190" r="2" fill="#78d490"/>
+      <!-- ═══════════════════════════════════ -->
+      <!-- ZONE 4: THE CRUCIBLE (Arc 2)       -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group locked" id="zone-crucible">
+        <rect x="0" y="700" width="700" height="200" fill="#0e0806" opacity="0.8"/>
+        <path d="M0 820 Q80 800 120 810 Q160 820 200 805 Q240 790 280 800 Q320 810 350 800" stroke="rgba(220,80,20,0.2)" stroke-width="3" fill="none" filter="url(#glow)"/>
+        <path d="M700 815 Q620 795 580 808 Q540 820 500 805 Q460 790 420 800 Q380 810 350 800" stroke="rgba(220,80,20,0.15)" stroke-width="3" fill="none" filter="url(#glow)"/>
+        <g>
+          <path d="M290 820 L260 780 L290 760 L350 755 L410 760 L440 780 L410 820 Z" fill="#1e1208" stroke="rgba(201,146,42,0.35)" stroke-width="1"/>
+          <path d="M305 815 L280 782 L305 765 L350 760 L395 765 L420 782 L395 815 Z" fill="#0a0804" stroke="rgba(220,100,20,0.25)" stroke-width="1"/>
+          <ellipse cx="350" cy="790" rx="22" ry="16" fill="rgba(220,100,20,0.12)" filter="url(#glow)"/>
+          <ellipse cx="350" cy="785" rx="12" ry="10" fill="rgba(240,140,20,0.15)" filter="url(#glow)"/>
+          <line x1="310" y1="760" x2="295" y2="730" stroke="rgba(201,146,42,0.3)" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <line x1="390" y1="760" x2="405" y2="730" stroke="rgba(201,146,42,0.3)" stroke-width="1.5" stroke-dasharray="3,2"/>
+        </g>
+        <g fill="#1e150a" opacity="0.7">
+          <path d="M80 800 L100 750 L120 800 Z"/><path d="M95 800 L120 740 L145 800 Z"/>
+          <path d="M560 798 L580 748 L600 798 Z"/><path d="M575 800 L600 742 L625 800 Z"/>
+        </g>
       </g>
 
-      <!-- Ancient forest stone archway -->
-      <g fill="#2a1d0e" stroke="rgba(201,146,42,0.3)" stroke-width="1">
-        <rect x="315" y="1160" width="14" height="50" rx="2"/>
-        <rect x="371" y="1160" width="14" height="50" rx="2"/>
-        <path d="M315 1165 Q350 1140 385 1165" fill="#2a1d0e" stroke="rgba(201,146,42,0.4)" stroke-width="1.5"/>
-      </g>
-      <!-- Arch rune glow -->
-      <path d="M320 1163 Q350 1143 380 1163" stroke="rgba(201,146,42,0.2)" stroke-width="3" fill="none" filter="url(#glow)"/>
-
-      <!-- ══════════════════════════════════════════ -->
-      <!-- ZONE 3: THE AWAKENING (Arc 1) -->
-      <!-- ══════════════════════════════════════════ -->
-      <!-- Dawn-lit highlands -->
-      <rect x="0" y="900" width="700" height="200" fill="#100c06" opacity="0.7"/>
-
-      <!-- Rolling dawn hills -->
-      <path d="M0 980 Q100 940 200 960 Q300 980 350 950 Q400 920 500 945 Q600 970 700 955 L700 1100 L0 1100 Z" fill="#1a1208" opacity="0.6"/>
-
-      <!-- Awakening stones (standing stones) -->
-      <g fill="#2a2010" stroke="rgba(201,146,42,0.2)" stroke-width="0.5">
-        <rect x="180" y="940" width="12" height="45" rx="2" transform="rotate(-3 186 962)"/>
-        <rect x="210" y="950" width="10" height="38" rx="2" transform="rotate(2 215 969)"/>
-        <rect x="235" y="945" width="11" height="42" rx="2"/>
-        <rect x="455" y="942" width="12" height="44" rx="2" transform="rotate(2 461 964)"/>
-        <rect x="480" y="948" width="10" height="40" rx="2" transform="rotate(-2 485 968)"/>
-        <rect x="505" y="944" width="11" height="43" rx="2"/>
-      </g>
-      <!-- Stone circle glow -->
-      <ellipse cx="210" cy="985" rx="45" ry="12" fill="rgba(201,146,42,0.06)" filter="url(#glow)"/>
-      <ellipse cx="480" cy="985" rx="45" ry="12" fill="rgba(201,146,42,0.06)" filter="url(#glow)"/>
-
-      <!-- Awakening dawn light -->
-      <ellipse cx="350" cy="960" rx="120" ry="40" fill="rgba(201,146,42,0.05)" filter="url(#strongGlow)"/>
-
-      <!-- Runic circle on ground -->
-      <circle cx="350" cy="975" r="30" fill="none" stroke="rgba(201,146,42,0.15)" stroke-width="1" stroke-dasharray="4,4"/>
-      <circle cx="350" cy="975" r="20" fill="none" stroke="rgba(201,146,42,0.1)" stroke-width="0.5"/>
-
-      <!-- ══════════════════════════════════════════ -->
-      <!-- ZONE 4: THE CRUCIBLE (Arc 2) -->
-      <!-- ══════════════════════════════════════════ -->
-      <!-- Volcanic/harsh terrain -->
-      <rect x="0" y="700" width="700" height="200" fill="#0e0806" opacity="0.8"/>
-
-      <!-- Lava crack glow in ground -->
-      <path d="M0 820 Q80 800 120 810 Q160 820 200 805 Q240 790 280 800 Q320 810 350 800" stroke="rgba(220,80,20,0.15)" stroke-width="3" fill="none" filter="url(#glow)"/>
-      <path d="M700 815 Q620 795 580 808 Q540 820 500 805 Q460 790 420 800 Q380 810 350 800" stroke="rgba(220,80,20,0.12)" stroke-width="3" fill="none" filter="url(#glow)"/>
-
-      <!-- Crucible forge structure -->
-      <g>
-        <!-- Base -->
-        <path d="M290 820 L260 780 L290 760 L350 755 L410 760 L440 780 L410 820 Z" fill="#1e1208" stroke="rgba(201,146,42,0.3)" stroke-width="1"/>
-        <!-- Inner forge glow -->
-        <path d="M305 815 L280 782 L305 765 L350 760 L395 765 L420 782 L395 815 Z" fill="#0a0804" stroke="rgba(220,100,20,0.2)" stroke-width="1"/>
-        <!-- Forge fire -->
-        <ellipse cx="350" cy="790" rx="22" ry="16" fill="rgba(220,100,20,0.08)" filter="url(#glow)"/>
-        <ellipse cx="350" cy="785" rx="12" ry="10" fill="rgba(240,140,20,0.1)" filter="url(#glow)"/>
-        <!-- Crucible chains -->
-        <line x1="310" y1="760" x2="295" y2="730" stroke="rgba(201,146,42,0.25)" stroke-width="1.5" stroke-dasharray="3,2"/>
-        <line x1="390" y1="760" x2="405" y2="730" stroke="rgba(201,146,42,0.25)" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <!-- ═══════════════════════════════════ -->
+      <!-- ZONE 5: THE RECKONING (Arc 3)      -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group locked" id="zone-reckoning">
+        <rect x="0" y="500" width="700" height="200" fill="#0c0e12" opacity="0.7"/>
+        <path d="M0 560 Q150 530 350 545 Q550 560 700 535 L700 700 L0 700 Z" fill="#10120e" opacity="0.5"/>
+        <g fill="#181e28" stroke="rgba(180,200,240,0.12)" stroke-width="0.5">
+          <rect x="160" y="535" width="14" height="55" rx="1"/>
+          <rect x="185" y="540" width="10" height="48" rx="1"/>
+          <rect x="505" y="533" width="14" height="57" rx="1"/>
+          <rect x="530" y="538" width="10" height="50" rx="1"/>
+          <rect x="340" y="528" width="12" height="52" rx="1"/>
+          <rect x="360" y="532" width="10" height="46" rx="1"/>
+        </g>
+        <g filter="url(#glow)" opacity="0.4">
+          <ellipse cx="170" cy="532" rx="8" ry="4" fill="rgba(100,140,220,0.5)"/>
+          <ellipse cx="515" cy="530" rx="8" ry="4" fill="rgba(100,140,220,0.5)"/>
+          <ellipse cx="348" cy="525" rx="8" ry="4" fill="rgba(100,140,220,0.5)"/>
+        </g>
+        <path d="M0 580 Q350 555 700 575" stroke="rgba(100,140,220,0.06)" stroke-width="20" fill="none" filter="url(#glow)"/>
       </g>
 
-      <!-- Harsh rocky outcrops -->
-      <g fill="#1e150a" opacity="0.7">
-        <path d="M80 800 L100 750 L120 800 Z"/>
-        <path d="M95 800 L120 740 L145 800 Z"/>
-        <path d="M560 795 L580 748 L600 795 Z"/>
-        <path d="M575 795 L600 742 L625 795 Z"/>
+      <!-- ═══════════════════════════════════ -->
+      <!-- ZONE 6: THE ASCENSION (Arc 4)      -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group locked" id="zone-ascension">
+        <rect x="0" y="300" width="700" height="200" fill="#0a0810" opacity="0.8"/>
+        <g fill="#181428" stroke="rgba(160,140,255,0.15)" stroke-width="0.5">
+          <path d="M120 460 L130 390 L140 460 Z"/>
+          <path d="M130 460 L145 380 L160 460 Z"/>
+          <path d="M155 458 L168 395 L181 458 Z"/>
+          <path d="M520 458 L533 388 L546 458 Z"/>
+          <path d="M538 460 L553 382 L568 460 Z"/>
+          <path d="M562 456 L575 392 L588 456 Z"/>
+        </g>
+        <g filter="url(#glow)" opacity="0.35">
+          <path d="M115 462 L130 388 L145 462" stroke="rgba(160,140,255,0.4)" stroke-width="0.5" fill="none"/>
+          <path d="M518 460 L533 386 L548 460" stroke="rgba(160,140,255,0.4)" stroke-width="0.5" fill="none"/>
+        </g>
+        <g fill="#9090d0" stroke="rgba(160,140,255,0.4)" stroke-width="0.5" opacity="0.5">
+          <path d="M280 420 L290 380 L300 420 Z"/>
+          <path d="M400 418 L410 378 L420 418 Z"/>
+          <path d="M338 408 L343 378 L348 408 Z"/>
+          <path d="M538 408 L543 378 L548 408 Z"/>
+        </g>
+        <circle cx="350" cy="400" r="35" fill="none" stroke="rgba(160,140,255,0.2)" stroke-width="2"/>
+        <circle cx="350" cy="400" r="25" fill="none" stroke="rgba(160,140,255,0.12)" stroke-width="1" stroke-dasharray="3,3"/>
+        <circle cx="350" cy="400" r="12" fill="rgba(140,120,240,0.08)" filter="url(#strongGlow)"/>
       </g>
 
-      <!-- ══════════════════════════════════════════ -->
-      <!-- ZONE 5: THE RECKONING (Arc 3) -->
-      <!-- ══════════════════════════════════════════ -->
-      <!-- Storm-grey plateau -->
-      <rect x="0" y="500" width="700" height="200" fill="#0c0a08" opacity="0.8"/>
-
-      <!-- Storm clouds suggestion -->
-      <ellipse cx="150" cy="550" rx="100" ry="35" fill="#161210" opacity="0.6"/>
-      <ellipse cx="550" cy="545" rx="110" ry="38" fill="#161210" opacity="0.6"/>
-      <ellipse cx="350" cy="535" rx="130" ry="30" fill="#141008" opacity="0.5"/>
-
-      <!-- Lightning suggestion -->
-      <path d="M200 530 L185 560 L200 560 L180 595" stroke="rgba(180,160,80,0.12)" stroke-width="1.5" fill="none"/>
-      <path d="M500 528 L518 558 L503 558 L523 592" stroke="rgba(180,160,80,0.12)" stroke-width="1.5" fill="none"/>
-
-      <!-- Reckoning obelisks -->
-      <g fill="#1e1a12" stroke="rgba(201,146,42,0.2)" stroke-width="0.5">
-        <path d="M150 680 L140 580 L150 570 L160 580 L160 680 Z" rx="1"/>
-        <path d="M335 675 L325 555 L335 543 L345 555 L345 675 Z"/>
-        <path d="M355 675 L355 555 L365 543 L375 555 L365 675 Z"/>
-        <path d="M545 678 L535 578 L545 567 L555 578 L555 678 Z"/>
-      </g>
-      <!-- Obelisk glows -->
-      <g filter="url(#glow)" opacity="0.4">
-        <line x1="150" y1="570" x2="150" y2="590" stroke="rgba(201,146,42,0.6)" stroke-width="2"/>
-        <line x1="340" y1="543" x2="340" y2="565" stroke="rgba(201,146,42,0.6)" stroke-width="2"/>
-        <line x1="360" y1="543" x2="360" y2="565" stroke="rgba(201,146,42,0.6)" stroke-width="2"/>
-        <line x1="545" y1="567" x2="545" y2="588" stroke="rgba(201,146,42,0.6)" stroke-width="2"/>
-      </g>
-
-      <!-- ══════════════════════════════════════════ -->
-      <!-- ZONE 6: THE ASCENSION (Arc 4) -->
-      <!-- ══════════════════════════════════════════ -->
-      <!-- Ethereal high altitude -->
-      <rect x="0" y="300" width="700" height="200" fill="#080810" opacity="0.7"/>
-
-      <!-- Ethereal light beams -->
-      <g opacity="0.06">
-        <path d="M350 300 L200 500" stroke="#a0c0ff" stroke-width="30" fill="none"/>
-        <path d="M350 300 L500 500" stroke="#a0c0ff" stroke-width="25" fill="none"/>
-        <path d="M350 300 L350 500" stroke="#c0d0ff" stroke-width="20" fill="none"/>
+      <!-- ═══════════════════════════════════ -->
+      <!-- THE WALL (Level 50)                -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group unlocked" id="zone-wall">
+        <rect x="0" y="285" width="700" height="20" fill="rgba(0,0,0,0.5)"/>
+        <rect x="0" y="250" width="700" height="40" fill="#1e1810" stroke="rgba(201,146,42,0.35)" stroke-width="0.5"/>
+        <g fill="#252015" stroke="rgba(201,146,42,0.3)" stroke-width="0.5">
+          <rect x="10" y="230" width="22" height="22" rx="1"/><rect x="42" y="230" width="22" height="22" rx="1"/>
+          <rect x="74" y="230" width="22" height="22" rx="1"/><rect x="106" y="230" width="22" height="22" rx="1"/>
+          <rect x="138" y="230" width="22" height="22" rx="1"/><rect x="170" y="230" width="22" height="22" rx="1"/>
+          <rect x="202" y="230" width="22" height="22" rx="1"/><rect x="234" y="230" width="22" height="22" rx="1"/>
+          <rect x="266" y="230" width="22" height="22" rx="1"/><rect x="314" y="220" width="72" height="32" rx="2"/>
+          <rect x="402" y="230" width="22" height="22" rx="1"/><rect x="434" y="230" width="22" height="22" rx="1"/>
+          <rect x="466" y="230" width="22" height="22" rx="1"/><rect x="498" y="230" width="22" height="22" rx="1"/>
+          <rect x="530" y="230" width="22" height="22" rx="1"/><rect x="562" y="230" width="22" height="22" rx="1"/>
+          <rect x="594" y="230" width="22" height="22" rx="1"/><rect x="626" y="230" width="22" height="22" rx="1"/>
+          <rect x="658" y="230" width="22" height="22" rx="1"/>
+        </g>
+        <g>
+          <rect x="316" y="222" width="68" height="68" fill="#181408" stroke="rgba(201,146,42,0.45)" stroke-width="1.5"/>
+          <path d="M316 260 Q350 235 384 260" fill="#181408" stroke="rgba(201,146,42,0.55)" stroke-width="1.5"/>
+          <rect x="320" y="258" width="28" height="32" fill="#100e08" stroke="rgba(201,146,42,0.3)" stroke-width="1"/>
+          <rect x="352" y="258" width="28" height="32" fill="#100e08" stroke="rgba(201,146,42,0.3)" stroke-width="1"/>
+          <line x1="334" y1="262" x2="334" y2="286" stroke="rgba(201,146,42,0.2)" stroke-width="0.5"/>
+          <line x1="366" y1="262" x2="366" y2="286" stroke="rgba(201,146,42,0.2)" stroke-width="0.5"/>
+          <circle cx="350" cy="274" r="3" fill="rgba(201,146,42,0.5)"/>
+        </g>
+        <g filter="url(#glow)">
+          <rect x="248" y="240" width="4" height="14" fill="#8b6914"/>
+          <ellipse cx="250" cy="239" rx="4" ry="5" fill="#f0a030" opacity="0.9"/>
+          <ellipse cx="250" cy="237" rx="7" ry="8" fill="rgba(240,160,48,0.25)"/>
+          <rect x="448" y="240" width="4" height="14" fill="#8b6914"/>
+          <ellipse cx="450" cy="239" rx="4" ry="5" fill="#f0a030" opacity="0.9"/>
+          <ellipse cx="450" cy="237" rx="7" ry="8" fill="rgba(240,160,48,0.25)"/>
+        </g>
+        <text x="350" y="270" text-anchor="middle" font-family="Cinzel, serif" font-size="7" fill="rgba(201,146,42,0.55)" letter-spacing="3">THE EDGE OF THE KNOWN WORLD · LEVEL 50</text>
+        <rect x="0" y="248" width="700" height="44" fill="rgba(201,146,42,0.04)" filter="url(#glow)"/>
       </g>
 
-      <!-- Floating islands -->
-      <g>
-        <!-- Left island -->
-        <ellipse cx="160" cy="420" rx="65" ry="18" fill="#1a1520" opacity="0.8"/>
-        <ellipse cx="160" cy="415" rx="60" ry="14" fill="#221a28" opacity="0.7"/>
-        <path d="M100 415 Q160 390 220 415" fill="#2a2035" opacity="0.5"/>
-        <!-- Right island -->
-        <ellipse cx="540" cy="415" rx="65" ry="18" fill="#1a1520" opacity="0.8"/>
-        <ellipse cx="540" cy="410" rx="60" ry="14" fill="#221a28" opacity="0.7"/>
-        <path d="M480 410 Q540 385 600 410" fill="#2a2035" opacity="0.5"/>
-      </g>
-
-      <!-- Crystal spires on islands -->
-      <g filter="url(#glow)" opacity="0.5">
-        <path d="M145 415 L150 385 L155 415 Z" fill="#8080c0" stroke="rgba(160,160,255,0.4)" stroke-width="0.5"/>
-        <path d="M158 413 L163 380 L168 413 Z" fill="#9090d0" stroke="rgba(160,160,255,0.4)" stroke-width="0.5"/>
-        <path d="M525 410 L530 382 L535 410 Z" fill="#8080c0" stroke="rgba(160,160,255,0.4)" stroke-width="0.5"/>
-        <path d="M538 408 L543 378 L548 408 Z" fill="#9090d0" stroke="rgba(160,160,255,0.4)" stroke-width="0.5"/>
-      </g>
-
-      <!-- Ascension portal -->
-      <circle cx="350" cy="400" r="35" fill="none" stroke="rgba(160,140,255,0.15)" stroke-width="2"/>
-      <circle cx="350" cy="400" r="25" fill="none" stroke="rgba(160,140,255,0.1)" stroke-width="1" stroke-dasharray="3,3"/>
-      <circle cx="350" cy="400" r="12" fill="rgba(140,120,240,0.05)" filter="url(#strongGlow)"/>
-
-      <!-- ══════════════════════════════════════════ -->
-      <!-- THE WALL (Level 50) -->
-      <!-- ══════════════════════════════════════════ -->
-      <!-- Wall base shadow -->
-      <rect x="0" y="285" width="700" height="20" fill="rgba(0,0,0,0.5)"/>
-
-      <!-- Main wall structure -->
-      <rect x="0" y="250" width="700" height="40" fill="#1e1810" stroke="rgba(201,146,42,0.3)" stroke-width="0.5"/>
-
-      <!-- Wall battlements (merlons) -->
-      <g fill="#252015" stroke="rgba(201,146,42,0.25)" stroke-width="0.5">
-        <rect x="10" y="230" width="22" height="22" rx="1"/>
-        <rect x="42" y="230" width="22" height="22" rx="1"/>
-        <rect x="74" y="230" width="22" height="22" rx="1"/>
-        <rect x="106" y="230" width="22" height="22" rx="1"/>
-        <rect x="138" y="230" width="22" height="22" rx="1"/>
-        <rect x="170" y="230" width="22" height="22" rx="1"/>
-        <rect x="202" y="230" width="22" height="22" rx="1"/>
-        <rect x="234" y="230" width="22" height="22" rx="1"/>
-        <rect x="266" y="230" width="22" height="22" rx="1"/>
-        <rect x="314" y="220" width="72" height="32" rx="2"/>
-        <rect x="402" y="230" width="22" height="22" rx="1"/>
-        <rect x="434" y="230" width="22" height="22" rx="1"/>
-        <rect x="466" y="230" width="22" height="22" rx="1"/>
-        <rect x="498" y="230" width="22" height="22" rx="1"/>
-        <rect x="530" y="230" width="22" height="22" rx="1"/>
-        <rect x="562" y="230" width="22" height="22" rx="1"/>
-        <rect x="594" y="230" width="22" height="22" rx="1"/>
-        <rect x="626" y="230" width="22" height="22" rx="1"/>
-        <rect x="658" y="230" width="22" height="22" rx="1"/>
-      </g>
-
-      <!-- Gate arch -->
-      <g>
-        <rect x="316" y="222" width="68" height="68" fill="#181408" stroke="rgba(201,146,42,0.4)" stroke-width="1.5"/>
-        <path d="M316 260 Q350 235 384 260" fill="#181408" stroke="rgba(201,146,42,0.5)" stroke-width="1.5"/>
-        <!-- Gate doors -->
-        <rect x="320" y="258" width="28" height="32" fill="#100e08" stroke="rgba(201,146,42,0.3)" stroke-width="1"/>
-        <rect x="352" y="258" width="28" height="32" fill="#100e08" stroke="rgba(201,146,42,0.3)" stroke-width="1"/>
-        <!-- Door details -->
-        <line x1="334" y1="262" x2="334" y2="286" stroke="rgba(201,146,42,0.2)" stroke-width="0.5"/>
-        <line x1="366" y1="262" x2="366" y2="286" stroke="rgba(201,146,42,0.2)" stroke-width="0.5"/>
-        <circle cx="350" cy="274" r="3" fill="rgba(201,146,42,0.4)"/>
-      </g>
-
-      <!-- Wall torches -->
-      <g filter="url(#glow)">
-        <rect x="248" y="240" width="4" height="14" fill="#8b6914"/>
-        <ellipse cx="250" cy="239" rx="4" ry="5" fill="#f0a030" opacity="0.8"/>
-        <ellipse cx="250" cy="237" rx="7" ry="8" fill="rgba(240,160,48,0.2)"/>
-
-        <rect x="448" y="240" width="4" height="14" fill="#8b6914"/>
-        <ellipse cx="450" cy="239" rx="4" ry="5" fill="#f0a030" opacity="0.8"/>
-        <ellipse cx="450" cy="237" rx="7" ry="8" fill="rgba(240,160,48,0.2)"/>
-      </g>
-
-      <!-- Wall label -->
-      <text x="350" y="270" text-anchor="middle" font-family="Cinzel, serif" font-size="7" fill="rgba(201,146,42,0.5)" letter-spacing="3">THE EDGE OF THE KNOWN WORLD · LEVEL 50</text>
-
-      <!-- Wall glow -->
-      <rect x="0" y="248" width="700" height="44" fill="rgba(201,146,42,0.03)" filter="url(#glow)"/>
-
-      <!-- ══════════════════════════════════════════ -->
-      <!-- ZONE 7: PROSPERITY PEAKS (Wealth gate) -->
-      <!-- ══════════════════════════════════════════ -->
-      <!-- Mountain range - prosperity themed (gold-veined) -->
-      <g id="zoneProsperty">
-        <!-- Mountain silhouettes -->
+      <!-- ═══════════════════════════════════ -->
+      <!-- ZONE 7: PROSPERITY PEAKS           -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group beyond-wall" id="zone-prosperity">
         <path d="M0 280 L60 180 L120 220 L180 140 L240 200 L280 160 L320 200 L350 130 L380 200 L420 155 L460 195 L520 140 L580 185 L640 165 L700 195 L700 280 Z" fill="#141008" opacity="0.9"/>
         <path d="M0 280 L80 200 L160 230 L220 175 L280 210 L350 155 L420 205 L480 178 L560 215 L640 185 L700 210 L700 280 Z" fill="#1a1510" opacity="0.7"/>
-
-        <!-- Gold veins in mountains -->
-        <g stroke="rgba(201,146,42,0.08)" stroke-width="0.5" fill="none">
+        <g stroke="rgba(201,146,42,0.1)" stroke-width="0.5" fill="none">
           <path d="M120 220 Q140 200 160 215 Q180 230 200 210"/>
           <path d="M480 178 Q500 160 520 172 Q540 185 560 170"/>
         </g>
-
-        <!-- Snow caps -->
         <path d="M340 130 L350 115 L360 130 Q355 128 350 128 Q345 128 340 130 Z" fill="#e8e0c0" opacity="0.4"/>
         <path d="M514 140 L522 124 L530 140 Q526 138 522 138 Q518 138 514 140 Z" fill="#e8e0c0" opacity="0.3"/>
         <path d="M174 140 L182 124 L190 140 Q186 138 182 138 Q178 138 174 140 Z" fill="#e8e0c0" opacity="0.3"/>
       </g>
 
-      <!-- ══════════════════════════════════════════ -->
-      <!-- ZONE 8: TIRELESS HIGHLANDS (Vitality gate) -->
-      <!-- ══════════════════════════════════════════ -->
-      <g id="zoneTireless">
-        <!-- Highland plateau -->
+      <!-- ═══════════════════════════════════ -->
+      <!-- ZONE 8: TIRELESS HIGHLANDS         -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group beyond-wall" id="zone-tireless">
         <path d="M0 160 Q175 100 350 90 Q525 80 700 120 L700 200 Q525 170 350 165 Q175 160 0 200 Z" fill="#0c1008" opacity="0.7"/>
-
-        <!-- Highland features - ancient ruins -->
         <g fill="#1a1810" stroke="rgba(201,146,42,0.1)" stroke-width="0.5" opacity="0.6">
-          <rect x="120" y="130" width="8" height="25" rx="1"/>
-          <rect x="135" y="135" width="6" height="20" rx="1"/>
-          <rect x="555" y="128" width="8" height="26" rx="1"/>
-          <rect x="570" y="133" width="6" height="21" rx="1"/>
+          <rect x="120" y="130" width="8" height="25" rx="1"/><rect x="135" y="135" width="6" height="20" rx="1"/>
+          <rect x="555" y="128" width="8" height="26" rx="1"/><rect x="570" y="133" width="6" height="21" rx="1"/>
         </g>
-
-        <!-- Highland mist -->
-        <path d="M0 150 Q175 120 350 115 Q525 110 700 140" stroke="rgba(180,200,180,0.05)" stroke-width="15" fill="none" filter="url(#glow)"/>
+        <path d="M0 150 Q175 120 350 115 Q525 110 700 140" stroke="rgba(180,200,180,0.06)" stroke-width="15" fill="none" filter="url(#glow)"/>
       </g>
 
-      <!-- ══════════════════════════════════════════ -->
-      <!-- ZONE 9: THE SCHOLAR'S SUMMIT (Mastery gate) -->
-      <!-- ══════════════════════════════════════════ -->
-      <g id="zoneScholar">
-        <!-- Summit peak -->
+      <!-- ═══════════════════════════════════ -->
+      <!-- ZONE 9: THE SCHOLAR'S SUMMIT       -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group beyond-wall" id="zone-scholar">
         <path d="M200 100 L350 20 L500 100 Q420 80 350 75 Q280 70 200 100 Z" fill="#100c10" opacity="0.8"/>
         <path d="M270 95 L350 35 L430 95 Q390 78 350 74 Q310 70 270 95 Z" fill="#140e14" opacity="0.7"/>
-
-        <!-- Summit snow -->
         <path d="M330 40 L350 20 L370 40 Q360 36 350 35 Q340 36 330 40 Z" fill="#e8e0d8" opacity="0.3"/>
-
-        <!-- Scholar's observatory dome -->
         <ellipse cx="350" cy="68" rx="20" ry="12" fill="#1a1520" stroke="rgba(201,146,42,0.15)" stroke-width="0.5" opacity="0.8"/>
         <rect x="338" y="68" width="24" height="14" fill="#161018" stroke="rgba(201,146,42,0.1)" stroke-width="0.5" opacity="0.7"/>
-        <!-- Dome glow -->
-        <ellipse cx="350" cy="68" rx="20" ry="12" fill="rgba(140,120,200,0.04)" filter="url(#glow)"/>
+        <ellipse cx="350" cy="68" rx="20" ry="12" fill="rgba(140,120,200,0.06)" filter="url(#glow)"/>
       </g>
 
-      <!-- ══════════════════════════════════════════ -->
-      <!-- THE PRESTIGE CITADEL (top, mythical) -->
-      <!-- ══════════════════════════════════════════ -->
-      <g id="zoneCitadel" opacity="0.5">
-        <!-- Citadel structure - barely visible -->
+      <!-- ═══════════════════════════════════ -->
+      <!-- THE PRESTIGE CITADEL               -->
+      <!-- ═══════════════════════════════════ -->
+      <g class="zone-group beyond-wall" id="zone-citadel">
         <path d="M310 30 L310 10 L320 0 L350 0 L380 0 L390 10 L390 30 Z" fill="#1e1828" stroke="rgba(180,160,255,0.1)" stroke-width="0.5"/>
         <rect x="320" y="8" width="60" height="22" fill="#1a1525" stroke="rgba(180,160,255,0.08)" stroke-width="0.5"/>
-        <!-- Citadel towers -->
         <rect x="318" y="2" width="10" height="18" fill="#201c2e"/>
         <rect x="372" y="2" width="10" height="18" fill="#201c2e"/>
         <path d="M318 4 L323 0 L328 4 Z" fill="#2a2040"/>
         <path d="M372 4 L377 0 L382 4 Z" fill="#2a2040"/>
-        <!-- Citadel glow - very faint -->
-        <ellipse cx="350" cy="15" rx="40" ry="15" fill="rgba(180,160,255,0.03)" filter="url(#strongGlow)"/>
+        <ellipse cx="350" cy="15" rx="40" ry="15" fill="rgba(180,160,255,0.04)" filter="url(#strongGlow)"/>
       </g>
 
-      <!-- ══════════════════════════════════════════ -->
-      <!-- COMPASS ROSE (bottom right) -->
-      <!-- ══════════════════════════════════════════ -->
+      <!-- Compass rose -->
       <g transform="translate(620, 1340)" opacity="0.35">
         <circle cx="0" cy="0" r="28" fill="none" stroke="rgba(201,146,42,0.4)" stroke-width="0.5"/>
         <circle cx="0" cy="0" r="20" fill="none" stroke="rgba(201,146,42,0.25)" stroke-width="0.5"/>
-        <!-- Cardinal points -->
         <path d="M0 -28 L4 -14 L0 -18 L-4 -14 Z" fill="rgba(240,192,80,0.6)"/>
         <path d="M0 28 L4 14 L0 18 L-4 14 Z" fill="rgba(201,146,42,0.4)"/>
         <path d="M28 0 L14 4 L18 0 L14 -4 Z" fill="rgba(201,146,42,0.4)"/>
         <path d="M-28 0 L-14 4 L-18 0 L-14 -4 Z" fill="rgba(201,146,42,0.4)"/>
-        <!-- N label -->
         <text x="0" y="-32" text-anchor="middle" font-family="Cinzel, serif" font-size="7" fill="rgba(240,192,80,0.5)">N</text>
         <circle cx="0" cy="0" r="3" fill="rgba(201,146,42,0.5)"/>
       </g>
 
-      <!-- ══════════════════════════════════════════ -->
-      <!-- MAP BORDER / FRAME -->
-      <!-- ══════════════════════════════════════════ -->
-      <rect x="8" y="8" width="684" height="1384" fill="none" stroke="rgba(201,146,42,0.15)" stroke-width="2" rx="2"/>
+      <!-- Map border -->
+      <rect x="8" y="8" width="684" height="1384" fill="none" stroke="rgba(201,146,42,0.18)" stroke-width="2" rx="2"/>
       <rect x="14" y="14" width="672" height="1372" fill="none" stroke="rgba(201,146,42,0.07)" stroke-width="1" rx="1"/>
-
-      <!-- Corner ornaments -->
       <g fill="rgba(201,146,42,0.3)">
-        <!-- TL -->
-        <path d="M8 30 L8 8 L30 8"/>
-        <path d="M12 30 L12 12 L30 12" stroke="rgba(201,146,42,0.15)" stroke-width="0.5" fill="none"/>
-        <!-- TR -->
-        <path d="M692 30 L692 8 L670 8"/>
-        <path d="M688 30 L688 12 L670 12" stroke="rgba(201,146,42,0.15)" stroke-width="0.5" fill="none"/>
-        <!-- BL -->
-        <path d="M8 1370 L8 1392 L30 1392"/>
-        <path d="M12 1370 L12 1388 L30 1388" stroke="rgba(201,146,42,0.15)" stroke-width="0.5" fill="none"/>
-        <!-- BR -->
-        <path d="M692 1370 L692 1392 L670 1392"/>
-        <path d="M688 1370 L688 1388 L670 1388" stroke="rgba(201,146,42,0.15)" stroke-width="0.5" fill="none"/>
+        <path d="M8 30 L8 8 L30 8"/><path d="M692 30 L692 8 L670 8"/>
+        <path d="M8 1370 L8 1392 L30 1392"/><path d="M692 1370 L692 1392 L670 1392"/>
       </g>
 
       </g><!-- end clip -->
@@ -823,93 +484,82 @@ body {
     <!-- Zone labels overlay -->
     <div class="zone-labels" id="zoneLabels">
 
-      <!-- New Vale -->
       <div class="zone-label" style="left:50%;top:94%" id="label-vale"
-        onmouseenter="showTooltip(event,'New Vale','Where every legend begins. The torches are always lit here.','✦ Always Unlocked')"
+        onmouseenter="showTooltip(event,'New Vale','Where every legend begins. The torches are always lit here.',true,'✦ Always Unlocked')"
         onmouseleave="hideTooltip()">
         <div class="zone-label-name">New Vale</div>
         <div class="zone-label-sub">The Beginning</div>
       </div>
 
-      <!-- Enlightening Forests -->
       <div class="zone-label" style="left:50%;top:81%" id="label-forests"
-        onmouseenter="showTooltip(event,'The Enlightening Forests','Ancient woods that part only for those who show up for 30 days.','Complete The Prologue to unlock')"
+        onmouseenter="showTooltip(event,'The Enlightening Forests','Ancient woods that part only for those who begin their journey.',false,'Begin your prologue to unlock')"
         onmouseleave="hideTooltip()">
         <div class="zone-label-name" id="ln-forests">The Enlightening Forests</div>
         <div class="zone-label-sub" id="ls-forests">The Prologue</div>
       </div>
 
-      <!-- The Awakening -->
       <div class="zone-label" style="left:50%;top:67%" id="label-awakening"
-        onmouseenter="showTooltip(event,'The Awakening','Standing stones mark the first kingdom. Here, dormant potential stirs.','Complete Arc 1 to unlock')"
+        onmouseenter="showTooltip(event,'The Awakening','Standing stones mark the first kingdom. Here, dormant potential stirs.',false,'Complete Arc I to unlock')"
         onmouseleave="hideTooltip()">
         <div class="zone-label-name" id="ln-awakening">The Awakening</div>
         <div class="zone-label-sub" id="ls-awakening">Arc I</div>
       </div>
 
-      <!-- The Crucible -->
       <div class="zone-label" style="left:50%;top:53%" id="label-crucible"
-        onmouseenter="showTooltip(event,'The Crucible','The forge demands everything. Only the persistent pass through.','Complete Arc 2 to unlock')"
+        onmouseenter="showTooltip(event,'The Crucible','The forge demands everything. Only the persistent pass through.',false,'Complete Arc II to unlock')"
         onmouseleave="hideTooltip()">
         <div class="zone-label-name" id="ln-crucible">The Crucible</div>
         <div class="zone-label-sub" id="ls-crucible">Arc II</div>
       </div>
 
-      <!-- The Reckoning -->
       <div class="zone-label" style="left:50%;top:40%" id="label-reckoning"
-        onmouseenter="showTooltip(event,'The Reckoning','Storm-swept plateaus where the ledger of your deeds is laid open.','Complete Arc 3 to unlock')"
+        onmouseenter="showTooltip(event,'The Reckoning','Storm-swept plateaus where the ledger of your deeds is laid open.',false,'Complete Arc III to unlock')"
         onmouseleave="hideTooltip()">
         <div class="zone-label-name" id="ln-reckoning">The Reckoning</div>
         <div class="zone-label-sub" id="ls-reckoning">Arc III</div>
       </div>
 
-      <!-- The Ascension -->
       <div class="zone-label" style="left:50%;top:27%" id="label-ascension"
-        onmouseenter="showTooltip(event,'The Ascension','Floating islands. Crystal spires. The final arc of the known journey.','Complete Arc 4 to unlock')"
+        onmouseenter="showTooltip(event,'The Ascension','Floating islands. Crystal spires. The final arc of the known journey.',false,'Complete Arc IV to unlock')"
         onmouseleave="hideTooltip()">
         <div class="zone-label-name" id="ln-ascension">The Ascension</div>
         <div class="zone-label-sub" id="ls-ascension">Arc IV</div>
       </div>
 
-      <!-- The Wall -->
       <div class="zone-label" style="left:50%;top:19.5%" id="label-wall"
-        onmouseenter="showTooltip(event,'The Edge of the Known World','Level 50. The wall does not block you — it asks what you have done in the real world.','Reach Level 50')"
+        onmouseenter="showTooltip(event,'The Edge of the Known World','Level 50. The wall does not block you — it asks what you have done out there.',true,'Reach Level 50')"
         onmouseleave="hideTooltip()">
-        <div class="zone-label-name" style="font-size:0.62rem;letter-spacing:3px;">✦ The Wall ✦</div>
+        <div class="zone-label-name" style="font-size:0.6rem;letter-spacing:3px;">✦ The Wall ✦</div>
       </div>
 
-      <!-- Prosperity Peaks -->
       <div class="zone-label" style="left:22%;top:13%" id="label-prosperity"
-        onmouseenter="showTooltip(event,'Prosperity Peaks','Where wealth becomes legacy. The peaks do not open for ambition alone.','Real-world gate: Wealth milestone')"
+        onmouseenter="showTooltip(event,'Prosperity Peaks','Where wealth becomes legacy. These peaks do not open for ambition alone.',false,'Real-world gate: Wealth milestone')"
         onmouseleave="hideTooltip()">
         <div class="zone-label-name" id="ln-prosperity">Prosperity Peaks</div>
         <div class="zone-label-sub" id="ls-prosperity">Beyond The Wall</div>
       </div>
 
-      <!-- Tireless Highlands -->
       <div class="zone-label" style="left:78%;top:11%" id="label-tireless"
-        onmouseenter="showTooltip(event,'Tireless Highlands','The body, perfected. Ancient ruins of those who came before line the plateau.','Real-world gate: Fitness milestone')"
+        onmouseenter="showTooltip(event,'Tireless Highlands','The body, perfected. Ancient ruins of those who came before line the plateau.',false,'Real-world gate: Fitness milestone')"
         onmouseleave="hideTooltip()">
         <div class="zone-label-name" id="ln-tireless">Tireless Highlands</div>
         <div class="zone-label-sub" id="ls-tireless">Beyond The Wall</div>
       </div>
 
-      <!-- Scholar's Summit -->
       <div class="zone-label" style="left:50%;top:7%" id="label-scholar"
-        onmouseenter="showTooltip(event,\"The Scholar's Summit\",'The observatory at the peak of human knowledge. Earned, never given.','Real-world gate: Mastery milestone')"
+        onmouseenter="showTooltip(event,'The Scholar\'s Summit','The observatory at the peak of human knowledge. Earned, never given.',false,'Real-world gate: Mastery milestone')"
         onmouseleave="hideTooltip()">
         <div class="zone-label-name" id="ln-scholar">The Scholar's Summit</div>
         <div class="zone-label-sub" id="ls-scholar">Beyond The Wall</div>
       </div>
 
-      <!-- Prestige Citadel -->
       <div class="zone-label" style="left:50%;top:2.5%" id="label-citadel"
-        onmouseenter="showTooltip(event,'The Prestige Citadel','Few have seen it clearly. Fewer still have reached it.','??????????')"
+        onmouseenter="showTooltip(event,'The Prestige Citadel','Few have seen it clearly. Fewer still have reached it.',false,'??????????')"
         onmouseleave="hideTooltip()">
-        <div class="zone-label-name" id="ln-citadel" style="font-size:0.6rem;opacity:0.4;">The Prestige Citadel</div>
+        <div class="zone-label-name" id="ln-citadel" style="font-size:0.58rem;opacity:0.3;">The Prestige Citadel</div>
       </div>
 
-    </div><!-- end zone labels -->
+    </div>
 
     <!-- Player marker -->
     <div class="player-marker" id="playerMarker" style="left:50%;top:91%;">
@@ -918,11 +568,8 @@ body {
       <div class="marker-dot"></div>
     </div>
 
-    <!-- Fog zones (rendered by JS) -->
-    <div id="fogContainer"></div>
-
-  </div><!-- end map-canvas -->
-</div><!-- end map-outer -->
+  </div>
+</div>
 
 <!-- Legend -->
 <div class="map-legend">
@@ -930,18 +577,14 @@ body {
   <div class="legend-item"><div class="legend-dot unlocked"></div>Unlocked</div>
   <div class="legend-item"><div class="legend-dot locked"></div>Locked</div>
 </div>
-
 <div class="scroll-hint">SCROLL TO EXPLORE ↕</div>
 
 <script>
 // ── READ SAVE DATA ──────────────────────────────────────────────────────
 let S = null;
-try {
-  const raw = localStorage.getItem('lq_poly');
-  if (raw) S = JSON.parse(raw);
-} catch(e) {}
+try { const raw = localStorage.getItem('lq_poly'); if(raw) S = JSON.parse(raw); } catch(e){}
 
-// ── HELPERS ─────────────────────────────────────────────────────────────
+// ── HELPERS ──────────────────────────────────────────────────────────────
 function xpNeededForLevel(lvl){
   if(lvl<=2)return 200;if(lvl<=5)return Math.round(200+(lvl-2)*120);
   if(lvl<=10)return Math.round(560+(lvl-5)*300);if(lvl<=20)return Math.round(2060+(lvl-10)*600);
@@ -951,119 +594,85 @@ function xpThreshold(lvl){if(lvl<=1)return 0;let t=0;for(let i=2;i<=lvl;i++)t+=x
 function levelFromXp(xp){let l=1;while(xp>=xpThreshold(l+1))l++;return l;}
 function totalXp(){if(!S)return 0;return Object.values(S.realms||{}).reduce((a,r)=>a+(r.xp||0),0);}
 function getLevelCap(){const completed=(S?.arcs||[]).filter(a=>a.completed).length;return 50+(completed*5);}
+function completedArcs(){return (S?.arcs||[]).filter(a=>a.completed).length;}
 
-// ── DETERMINE PLAYER POSITION ───────────────────────────────────────────
+// ── ZONE STATE ────────────────────────────────────────────────────────────
+function getZoneStates(){
+  const arcs = completedArcs();
+  const lvl  = levelFromXp(totalXp());
+  const prologueStarted = !!(S?.prologueDay1Shown || S?.arcPrologueDone || arcs >= 1);
+  return {
+    vale:        { unlocked: true,           beyondWall: false },
+    forests:     { unlocked: prologueStarted, beyondWall: false },
+    awakening:   { unlocked: arcs >= 1,       beyondWall: false },
+    crucible:    { unlocked: arcs >= 2,       beyondWall: false },
+    reckoning:   { unlocked: arcs >= 3,       beyondWall: false },
+    ascension:   { unlocked: arcs >= 4,       beyondWall: false },
+    wall:        { unlocked: true,            beyondWall: false },
+    prosperity:  { unlocked: false,           beyondWall: true  },
+    tireless:    { unlocked: false,           beyondWall: true  },
+    scholar:     { unlocked: false,           beyondWall: true  },
+    citadel:     { unlocked: false,           beyondWall: true  },
+  };
+}
+
 function getPlayerZone(){
   if(!S) return 'vale';
-  const lvl = levelFromXp(totalXp());
-  const arcs = S.arcs || [];
-  const completedArcs = arcs.filter(a=>a.completed).length;
-
-  if(lvl >= 50) return 'wall';
-  if(completedArcs >= 4) return 'ascension';
-  if(completedArcs >= 3) return 'reckoning';
-  if(completedArcs >= 2) return 'crucible';
-  if(completedArcs >= 1) return 'awakening';
-  if(S.arcPrologueDone) return 'awakening';
-  if(S.prologueDay1Shown) return 'forests';
+  const lvl  = levelFromXp(totalXp());
+  const arcs = completedArcs();
+  if(lvl >= 50)  return 'wall';
+  if(arcs >= 4)  return 'ascension';
+  if(arcs >= 3)  return 'reckoning';
+  if(arcs >= 2)  return 'crucible';
+  if(arcs >= 1)  return 'awakening';
+  if(S?.arcPrologueDone) return 'awakening';
+  if(S?.prologueDay1Shown) return 'forests';
   return 'vale';
 }
 
-// Zone Y positions (as % of map height)
 const ZONE_POSITIONS = {
-  vale:       { x: 50, y: 91 },
-  forests:    { x: 50, y: 78 },
-  awakening:  { x: 50, y: 65 },
-  crucible:   { x: 50, y: 52 },
-  reckoning:  { x: 50, y: 39 },
-  ascension:  { x: 50, y: 26 },
-  wall:       { x: 50, y: 19 },
+  vale:       { x:50, y:91 }, forests:   { x:50, y:78 },
+  awakening:  { x:50, y:65 }, crucible:  { x:50, y:52 },
+  reckoning:  { x:50, y:39 }, ascension: { x:50, y:26 },
+  wall:       { x:50, y:19 },
 };
 
-// ── STARS ───────────────────────────────────────────────────────────────
-function spawnStars(){
-  const c = document.getElementById('stars');
-  for(let i=0;i<120;i++){
-    const s = document.createElement('div');
-    s.className = 'star';
-    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${Math.random()<0.3?'2px':'1px'};height:${Math.random()<0.3?'2px':'1px'};animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;
-    c.appendChild(s);
-  }
-}
+const ZONE_INFO = {
+  vale:       { name:'New Vale',                    sub:'The Beginning' },
+  forests:    { name:'The Enlightening Forests',    sub:'The Prologue' },
+  awakening:  { name:'The Awakening',               sub:'Arc I' },
+  crucible:   { name:'The Crucible',                sub:'Arc II' },
+  reckoning:  { name:'The Reckoning',               sub:'Arc III' },
+  ascension:  { name:'The Ascension',               sub:'Arc IV' },
+  wall:       { name:'The Edge of the Known World', sub:'Level 50' },
+};
 
-// ── FOG SYSTEM ──────────────────────────────────────────────────────────
-const FOG_ZONES = [
-  { id: 'fog-forests',    top:'71%',  height:'14%', unlocked: ()=> !!(S?.arcPrologueDone || (S?.arcs||[]).filter(a=>a.completed).length >= 1) },
-  { id: 'fog-awakening',  top:'57%',  height:'14%', unlocked: ()=> (S?.arcs||[]).filter(a=>a.completed).length >= 1 },
-  { id: 'fog-crucible',   top:'43%',  height:'14%', unlocked: ()=> (S?.arcs||[]).filter(a=>a.completed).length >= 2 },
-  { id: 'fog-reckoning',  top:'29%',  height:'14%', unlocked: ()=> (S?.arcs||[]).filter(a=>a.completed).length >= 3 },
-  { id: 'fog-ascension',  top:'15%',  height:'14%', unlocked: ()=> (S?.arcs||[]).filter(a=>a.completed).length >= 4 },
-  { id: 'fog-beyond',     top:'0%',   height:'18%', unlocked: ()=> levelFromXp(totalXp()) >= 50, deep: true },
-  // New Vale is NEVER fogged — always lit, no entry for it here
-];
-
-function buildFog(){
-  const container = document.getElementById('fogContainer');
-  FOG_ZONES.forEach(zone => {
-    const isUnlocked = zone.unlocked();
-    if(isUnlocked) return; // no fog
-
-    const el = document.createElement('div');
-    el.className = 'fog-zone';
-    el.id = zone.id;
-    el.style.cssText = `top:${zone.top};left:0;right:0;height:${zone.height};background:${zone.deep ? 'rgba(4,3,8,0.95)' : 'rgba(8,6,3,0.88)'};`;
-
-    // Add wispy particles
-    const particles = document.createElement('div');
-    particles.className = 'fog-particles';
-    for(let i=0;i<6;i++){
-      const w = document.createElement('div');
-      w.className = 'fog-wisp';
-      const size = 80 + Math.random()*120;
-      w.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*80}%;left:${-20+Math.random()*30}%;animation-duration:${15+Math.random()*20}s;animation-delay:${Math.random()*10}s;opacity:${0.4+Math.random()*0.4};`;
-      particles.appendChild(w);
+// ── APPLY ZONE STATES ────────────────────────────────────────────────────
+function applyZoneStates(){
+  const states = getZoneStates();
+  Object.entries(states).forEach(([zoneId, state]) => {
+    const el = document.getElementById(`zone-${zoneId}`);
+    if(!el) return;
+    if(state.beyondWall){
+      el.className = `zone-group beyond-wall${state.unlocked?' unlocked':''}`;
+    } else {
+      el.className = `zone-group ${state.unlocked?'unlocked':'locked'}`;
     }
-    el.appendChild(particles);
-    container.appendChild(el);
+    // Update labels
+    const nameEl = document.getElementById(`ln-${zoneId}`);
+    const subEl  = document.getElementById(`ls-${zoneId}`);
+    if(nameEl) nameEl.classList.toggle('locked', !state.unlocked);
+    if(subEl)  subEl.classList.toggle('locked',  !state.unlocked);
   });
 }
 
-// ── UPDATE LABELS FOR FOG STATE ──────────────────────────────────────────
-function updateLabels(){
-  const completedArcs = (S?.arcs||[]).filter(a=>a.completed).length;
-  const prologueDone = !!(S?.arcPrologueDone || completedArcs >= 1);
-  const prologueStarted = !!(S?.prologueDay1Shown || prologueDone);
-  const lvl = levelFromXp(totalXp());
-
-  const fogStates = {
-    forests:    !prologueStarted,
-    awakening:  completedArcs < 1,
-    crucible:   completedArcs < 2,
-    reckoning:  completedArcs < 3,
-    ascension:  completedArcs < 4,
-    prosperity: lvl < 50,
-    tireless:   lvl < 50,
-    scholar:    lvl < 50,
-    citadel:    true, // always mysterious
-  };
-
-  Object.entries(fogStates).forEach(([zone, fogged]) => {
-    const nameEl = document.getElementById(`ln-${zone}`);
-    const subEl  = document.getElementById(`ls-${zone}`);
-    if(nameEl) nameEl.classList.toggle('fogged', fogged);
-    if(subEl)  subEl.classList.toggle('fogged', fogged);
-  });
-}
-
-// ── POSITION PLAYER MARKER ───────────────────────────────────────────────
+// ── PLAYER MARKER ────────────────────────────────────────────────────────
 function positionMarker(){
   const zone = getPlayerZone();
-  const pos = ZONE_POSITIONS[zone] || ZONE_POSITIONS.vale;
+  const pos  = ZONE_POSITIONS[zone] || ZONE_POSITIONS.vale;
   const marker = document.getElementById('playerMarker');
   marker.style.left = pos.x + '%';
   marker.style.top  = pos.y + '%';
-
-  // Use player's avatar if available
   if(S?.avatar) marker.querySelector('.marker-figure').textContent = S.avatar;
 }
 
@@ -1074,48 +683,57 @@ function updateHeader(){
   document.getElementById('headerName').textContent  = S?.name || 'Lorekeeper';
 }
 
+// ── CURRENT ZONE BANNER ──────────────────────────────────────────────────
+function showZoneBanner(){
+  const zone = getPlayerZone();
+  const info = ZONE_INFO[zone];
+  if(!info) return;
+  const banner = document.getElementById('zoneBanner');
+  document.getElementById('zoneBannerName').textContent = info.name;
+  document.getElementById('zoneBannerSub').textContent  = info.sub;
+  banner.classList.add('visible');
+  setTimeout(()=>banner.classList.remove('visible'), 3500);
+}
+
 // ── TOOLTIP ──────────────────────────────────────────────────────────────
-function showTooltip(e, name, desc, status){
+function showTooltip(e, name, desc, isUnlocked, status){
   const t = document.getElementById('tooltip');
   document.getElementById('tooltipName').textContent   = name;
   document.getElementById('tooltipDesc').textContent   = desc;
-  document.getElementById('tooltipStatus').textContent = status;
+  const statusEl = document.getElementById('tooltipStatus');
+  statusEl.textContent   = status;
+  statusEl.className = isUnlocked ? 'tooltip-status' : 'tooltip-status locked-status';
   t.classList.add('visible');
   moveTooltip(e);
 }
 function moveTooltip(e){
   const t = document.getElementById('tooltip');
-  const x = Math.min(e.clientX + 16, window.innerWidth  - 260);
-  const y = Math.min(e.clientY + 16, window.innerHeight - 140);
-  t.style.left = x + 'px';
-  t.style.top  = y + 'px';
+  const x = Math.min(e.clientX+16, window.innerWidth-260);
+  const y = Math.min(e.clientY+16, window.innerHeight-140);
+  t.style.left = x+'px'; t.style.top = y+'px';
 }
-function hideTooltip(){
-  document.getElementById('tooltip').classList.remove('visible');
-}
-document.addEventListener('mousemove', e => {
-  if(document.getElementById('tooltip').classList.contains('visible')) moveTooltip(e);
-});
+function hideTooltip(){ document.getElementById('tooltip').classList.remove('visible'); }
+document.addEventListener('mousemove', e=>{ if(document.getElementById('tooltip').classList.contains('visible')) moveTooltip(e); });
 
-// ── INIT ─────────────────────────────────────────────────────────────────
-spawnStars();
-buildFog();
-updateLabels();
-positionMarker();
-updateHeader();
-
-// If no save data, show a gentle prompt
-if(!S){
-  const vale = document.getElementById('label-vale');
-  if(vale){
-    const hint = document.createElement('div');
-    hint.style.cssText = 'font-size:0.72rem;color:rgba(240,192,80,0.5);margin-top:6px;font-style:italic;font-family:Crimson Pro,serif;';
-    hint.textContent = 'Begin your legend in Lorekeeper to unlock the world';
-    vale.appendChild(hint);
+// ── STARS ────────────────────────────────────────────────────────────────
+function spawnStars(){
+  const c = document.getElementById('stars');
+  for(let i=0;i<120;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${Math.random()<0.3?'2px':'1px'};height:${Math.random()<0.3?'2px':'1px'};animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;
+    c.appendChild(s);
   }
 }
 
-// Fade in map gracefully
+// ── INIT ─────────────────────────────────────────────────────────────────
+spawnStars();
+applyZoneStates();
+positionMarker();
+updateHeader();
+setTimeout(showZoneBanner, 1200);
+
+// Fade in
 document.querySelector('.map-outer').style.opacity = '0';
 document.querySelector('.map-outer').style.transition = 'opacity 1.2s ease';
 setTimeout(()=>{ document.querySelector('.map-outer').style.opacity = '1'; }, 100);
