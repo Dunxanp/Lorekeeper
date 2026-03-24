@@ -70,6 +70,19 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 40% at 50
 .memory-fragment-text{font-size:0.88rem;color:rgba(240,221,176,0.45);line-height:1.7;max-height:120px;overflow:hidden;mask-image:linear-gradient(180deg,rgba(240,221,176,0.45) 60%,transparent);-webkit-mask-image:linear-gradient(180deg,rgba(240,221,176,0.45) 60%,transparent);}
 .memory-fragment-dismiss{margin-top:14px;background:none;border:none;font-family:'Crimson Pro',serif;font-style:italic;font-size:0.8rem;color:rgba(201,146,42,0.35);cursor:pointer;padding:0;transition:color 0.2s;}
 .memory-fragment-dismiss:hover{color:rgba(201,146,42,0.7);}
+.arc-banner{background:linear-gradient(135deg,rgba(201,146,42,0.08),rgba(201,146,42,0.03));border:1px solid var(--border);border-radius:8px;padding:18px 22px;display:flex;flex-direction:column;gap:10px;}
+.arc-banner-eyebrow{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:3px;color:rgba(201,146,42,0.5);text-transform:uppercase;}
+.arc-banner-title{font-family:'Cinzel Decorative',serif;font-size:1.1rem;color:var(--gold-l);text-shadow:0 0 16px rgba(240,192,80,0.3);}
+.arc-banner-desc{font-size:0.88rem;color:var(--pdim);line-height:1.6;}
+.arc-banner-realms{display:flex;gap:10px;flex-wrap:wrap;}
+.arc-banner-realm{display:flex;align-items:center;gap:6px;font-size:0.8rem;padding:4px 12px;border-radius:20px;border:1px solid rgba(201,146,42,0.2);background:rgba(0,0,0,0.2);}
+.arc-banner-progress{display:flex;flex-direction:column;gap:4px;}
+.arc-banner-prog-lbl{display:flex;justify-content:space-between;font-size:0.72rem;color:var(--pmuted);}
+.arc-banner-prog-track{height:6px;background:rgba(0,0,0,0.4);border-radius:3px;border:1px solid rgba(201,146,42,0.1);overflow:hidden;}
+.arc-banner-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-l));transition:width 0.8s var(--ease);}
+.arc-banner-reward{font-size:0.78rem;color:rgba(201,146,42,0.5);font-style:italic;}
+.cap-notice{text-align:center;padding:12px 16px;background:rgba(201,146,42,0.05);border:1px solid rgba(201,146,42,0.15);border-radius:6px;font-size:0.82rem;color:var(--pdim);font-style:italic;margin-top:4px;}
+.bar-cap-marker{position:absolute;top:0;bottom:0;width:2px;background:rgba(240,192,80,0.6);border-radius:1px;box-shadow:0 0 4px rgba(240,192,80,0.4);}
 .bar-wrap{width:100%;}
 .bar-lbl{display:flex;justify-content:space-between;font-size:0.73rem;color:var(--pmuted);margin-bottom:4px;}
 .bar-track{height:8px;background:rgba(0,0,0,0.5);border-radius:2px;border:1px solid rgba(201,146,42,0.12);overflow:hidden;}
@@ -417,7 +430,8 @@ select option{background:#1a0f05;}
 		<div class="title-badge" id="titleBadgeEl"></div>
       <div class="bar-wrap">
         <div class="bar-lbl"><span id="overallLvlLbl">Level 1</span><span id="overallXpLbl">0 / 200 XP</span></div>
-        <div class="bar-track"><div class="bar-fill" id="overallBar" style="width:0%"></div></div>
+        <div class="bar-track" style="position:relative;"><div class="bar-fill" id="overallBar" style="width:0%"></div><div class="bar-cap-marker" id="capMarker" style="display:none;left:100%;"></div></div>
+		<div id="capNotice"></div>
       </div>
     </div>
     <div class="rune-div"><div class="rune-div-gem"></div></div>
@@ -429,6 +443,7 @@ select option{background:#1a0f05;}
       <button class="nav-btn" onclick="goPage('chronicle',this)"><span class="nav-icon">📜</span>Chronicle</button>
       <button class="nav-btn" onclick="goPage('achievements',this)"><span class="nav-icon">🏆</span>Achievements</button>
       <button class="nav-btn" onclick="goPage('charts',this)"><span class="nav-icon">📊</span>Chronicles</button>
+	  <button class="nav-btn" onclick="goPage('arcs',this)"><span class="nav-icon">🌀</span>Seasonal Arcs</button>
       <button class="nav-btn" id="prophecyNavBtn" onclick="goPage('prophecy',this)"><span class="nav-icon">🜏</span>The Prophecy</button>
       <button class="nav-btn" onclick="goPage('settings',this)"><span class="nav-icon">⚙️</span>Settings</button>
     </nav>
@@ -445,6 +460,7 @@ select option{background:#1a0f05;}
 
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
+	<div id="arcBanner"></div>
     <div class="poly-banner">
       <span class="poly-icon">⚡</span>
       <div style="flex:1">
@@ -587,6 +603,12 @@ select option{background:#1a0f05;}
     </div>
     <div class="charts-grid" id="chartsGrid"></div>
   </div>
+  
+<!-- ARCS PAGE -->
+<div class="page" id="page-arcs">
+  <div class="sec-head"><div class="sec-title">Seasonal Arcs</div></div>
+  <div id="arcsPageContent" style="display:flex;flex-direction:column;gap:20px;"></div>
+</div>
 
   <!-- PROPHECY PAGE -->
   <div class="page" id="page-prophecy">
@@ -649,6 +671,19 @@ select option{background:#1a0f05;}
           <button class="settings-action danger" onclick="resetProgress()">Reset</button>
         </div>
       </div>
+	  
+		<!-- Legend Codex -->
+		<div class="settings-section">
+		  <div class="settings-section-title">Legend Codex</div>
+		  <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+			<div class="settings-row-label">Level Cap</div>
+			<div class="settings-row-sub">Your legend is capped at <strong id="codexCap" style="color:var(--gold);">Level 50</strong>. Complete Seasonal Arcs to raise it by +5 each. Beyond Level 60, real-world achievements are required — salary milestones, fitness benchmarks, completed qualifications. The cap is not a wall. It is the game respecting you enough to demand something real.</div>
+		  </div>
+		  <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+			<div class="settings-row-label">Seasonal Arcs</div>
+			<div class="settings-row-sub">Every 90 days a new arc begins, pairing one of your weaker realms with one of your strongest. Each arc has a name, a theme, and an exclusive title reward. Complete all four arcs in a year and your legend will be written across every realm.</div>
+		  </div>
+		</div>
 
       <!-- About -->
       <div class="settings-section">
@@ -843,7 +878,7 @@ function showUndo(msg,undoFn,durationMs=5000){
 function clearUndo(){if(undoTimer){clearTimeout(undoTimer);undoTimer=null;}if(undoEl){undoEl.remove();undoEl=null;}}
 
 // ── RENDER ─────────────────────────────────────────────────────────────
-function render(){renderSidebar();renderPolymath();renderRealms();renderDashRewards();renderDashQuests();renderDashHabits();renderQuests();renderHabits();renderRewards();renderAchievements();renderJournal();renderSettings();renderProphecyPage();populateSelects();}
+function render(){renderSidebar();renderPolymath();renderRealms();renderDashRewards();renderDashQuests();renderDashHabits();renderQuests();renderHabits();renderRewards();renderAchievements();renderJournal();renderSettings();renderProphecyPage();renderArcBanner();populateSelects();}
 
 function renderSidebar(){
   document.getElementById('avatarBtn').textContent=S.avatar;
@@ -853,6 +888,18 @@ function renderSidebar(){
   document.getElementById('overallLvlLbl').textContent=`Level ${lvl}`;
   document.getElementById('overallXpLbl').textContent=`${into.toLocaleString()} / ${needed.toLocaleString()} XP`;
   document.getElementById('overallBar').style.width=pct+'%';
+  const cap=getLevelCap();
+  const capMarker=document.getElementById('capMarker');
+  const capNotice=document.getElementById('capNotice');
+  if(lvl>=cap){
+    if(capMarker)capMarker.style.display='none';
+    if(capNotice)capNotice.innerHTML=`<div class="cap-notice">⚔️ The path grows steep. Complete a Seasonal Arc to push beyond Level ${cap}.</div>`;
+  } else {
+    if(capMarker){capMarker.style.display='block';capMarker.style.left='100%';}
+    if(capNotice)capNotice.innerHTML='';
+  }
+  const codexCap=document.getElementById('codexCap');
+  if(codexCap)codexCap.textContent=`Level ${cap}`;
   const tb=document.getElementById('titleBadgeEl');
   if(tb)tb.textContent=S.activeTitle?(TITLES.find(t=>t.id===S.activeTitle)?.name||''):'';
   document.getElementById('realmMiniList').innerHTML=REALMS.map(r=>{
@@ -1267,6 +1314,7 @@ function goPage(name,btn){
   else document.querySelectorAll('.nav-btn').forEach(b=>{if(b.textContent.trim().toLowerCase().includes(name.toLowerCase()))b.classList.add('active');});
   if(name==='charts')setTimeout(()=>{document.querySelectorAll('.chart-btn').forEach(b=>b.classList.remove('active'));const ab=document.getElementById('cw'+chartWindow);if(ab)ab.classList.add('active');renderCharts();},50);
   if(name==='prophecy')renderProphecyPage();
+  if(name==='arcs')renderArcsPage();
 }
 function showModal(t,b){document.getElementById('modalTitle').textContent=t;document.getElementById('modalBody').textContent=b;document.getElementById('modal').classList.add('show');}
 function closeModal(){document.getElementById('modal').classList.remove('show');}
@@ -1377,6 +1425,218 @@ function seed(){
 }
 
 // ── PROPHECY ───────────────────────────────────────────────────────────
+// ── SEASONAL ARCS ──────────────────────────────────────────────────────
+const ARC_DEFS=[
+  {id:'awakening', name:'The Awakening',  flavour:'Every legend has a beginning. The realms you have neglected stir, calling you toward the unknown.',  reward:'arc-awakening'},
+  {id:'crucible',  name:'The Crucible',   flavour:'The forge does not care for comfort. What resists the heat becomes steel.',                           reward:'arc-crucible'},
+  {id:'reckoning', name:'The Reckoning',  flavour:'The ledger of your deeds is laid open. What has been avoided must now be faced.',                     reward:'arc-reckoning'},
+  {id:'ascension', name:'The Ascension',  flavour:'The summit is not given. It is taken, one step at a time, through every realm you have mastered.',    reward:'arc-ascension'},
+];
+
+// Add arc completion titles to TITLES array
+const ARC_TITLES=[
+  {id:'arc-awakening', name:'The Awakening-Born',    desc:'Completed The Awakening arc'},
+  {id:'arc-crucible',  name:'The Crucible-Forged',   desc:'Completed The Crucible arc'},
+  {id:'arc-reckoning', name:'The Reckoned',           desc:'Completed The Reckoning arc'},
+  {id:'arc-ascension', name:'The Ascendant-Born',     desc:'Completed The Ascension arc'},
+];
+ARC_TITLES.forEach(t=>{if(!TITLES.find(x=>x.id===t.id))TITLES.push({...t,check:()=>false});});
+
+function getLevelCap(){
+  const completed=(S.arcs||[]).filter(a=>a.completed).length;
+  return 50+(completed*5);
+}
+
+function getWeakRealms(){
+  const targeted=(S.arcs||[]).map(a=>a.weakRealm).filter(Boolean);
+  const available=REALMS.filter(r=>!targeted.includes(r.id));
+  const pool=available.length?available:REALMS; // reset if all targeted
+  return [...pool].sort((a,b)=>(S.realms[a.id]?.xp||0)-(S.realms[b.id]?.xp||0));
+}
+
+function getStrongRealm(excludeId){
+  const anchoredBefore=(S.arcs||[]).map(a=>a.strongRealm).filter(Boolean);
+  const sorted=[...REALMS].sort((a,b)=>(S.realms[b.id]?.xp||0)-(S.realms[a.id]?.xp||0));
+  // prefer one not used as anchor before, and not the weak realm
+  const fresh=sorted.filter(r=>r.id!==excludeId&&!anchoredBefore.includes(r.id));
+  if(fresh.length)return fresh[0].id;
+  // fallback — just highest that isn't the weak realm
+  return sorted.find(r=>r.id!==excludeId)?.id||REALMS[0].id;
+}
+
+function assignArc(){
+  const arcIndex=(S.arcs||[]).length;
+  if(arcIndex>=4)return; // all four arcs done
+  const def=ARC_DEFS[arcIndex];
+  const weak=getWeakRealms()[0];
+  const strongId=getStrongRealm(weak.id);
+  const arc={
+    defId:def.id, name:def.name, flavour:def.flavour,
+    weakRealm:weak.id, strongRealm:strongId,
+    startDate:todayStr(), endDate:dateAddDays(todayStr(),90),
+    completed:false, reward:def.reward
+  };
+  if(!S.arcs)S.arcs=[];
+  S.arcs.push(arc);
+  save();
+  showArcAssignModal(arc);
+}
+
+function dateAddDays(ds,n){
+  const d=new Date(ds+'T12:00:00');d.setDate(d.getDate()+n);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function daysBetween(ds1,ds2){
+  const d1=new Date(ds1+'T12:00:00');const d2=new Date(ds2+'T12:00:00');
+  return Math.ceil((d2-d1)/(1000*60*60*24));
+}
+
+function showArcAssignModal(arc){
+  const weak=REALMS.find(r=>r.id===arc.weakRealm);
+  const strong=REALMS.find(r=>r.id===arc.strongRealm);
+  document.getElementById('modalTitle').textContent=`✦ ${arc.name} Begins ✦`;
+  document.getElementById('modalBody').textContent=`${arc.flavour}\n\nYour realms this arc:\n${weak?.icon} ${weak?.name} — your growth edge\n${strong?.icon} ${strong?.name} — your anchor\n\n90 days. One chapter. Your legend awaits.`;
+  document.getElementById('modal').classList.add('show');
+}
+
+function checkArcCompletion(){
+  if(!S.arcs||!S.arcs.length)return;
+  const active=S.arcs.find(a=>!a.completed);
+  if(!active)return;
+  if(todayStr()>=active.endDate){
+    active.completed=true;
+    save();
+    // unlock arc title
+    if(!S.unlockedTitles)S.unlockedTitles=[];
+    if(!S.unlockedTitles.includes(active.reward)){
+      S.unlockedTitles.push(active.reward);
+    }
+    // raise cap notification handled in renderSidebar
+    const def=ARC_DEFS.find(d=>d.id===active.defId);
+    setTimeout(()=>{
+      document.getElementById('modalTitle').textContent=`✦ ${active.name} Complete ✦`;
+      document.getElementById('modalBody').textContent=`Your arc is complete, Lorekeeper.\n\nThe ceiling rises. Level ${getLevelCap()} is now within reach.\n\nA new title has been added to your collection.`;
+      document.getElementById('modal').classList.add('show');
+    },600);
+    // assign next arc after modal
+    setTimeout(()=>assignArc(),4000);
+  }
+}
+
+function checkPrologue(){
+  if(S.arcPrologueDone)return;
+  if(!S.firstBootDate)S.firstBootDate=todayStr();
+  const daysSince=daysBetween(S.firstBootDate,todayStr());
+
+  if(daysSince===0&&!S.prologueDay1Shown){
+    S.prologueDay1Shown=true;save();
+    setTimeout(()=>{
+      document.getElementById('modalTitle').textContent='✦ The Prologue Begins ✦';
+      document.getElementById('modalBody').textContent='Your first chapter has not yet been written.\n\nExplore your realms. Build your habits. Chronicle your deeds.\n\nIn 30 days, the arc will find you.';
+      document.getElementById('modal').classList.add('show');
+    },3500);
+  } else if(daysSince>=15&&daysSince<30&&!S.prologueMidShown){
+    S.prologueMidShown=true;save();
+    const remaining=30-daysSince;
+    showToast(`✦ The Prologue continues. Your first Seasonal Arc begins in ${remaining} days.`);
+  } else if(daysSince>=30){
+    S.arcPrologueDone=true;save();
+    assignArc();
+  }
+}
+
+function renderArcBanner(){
+  const el=document.getElementById('arcBanner');
+  if(!el)return;
+
+  // Prologue state
+  if(!S.arcPrologueDone){
+    const start=S.firstBootDate||todayStr();
+    const daysSince=daysBetween(start,todayStr());
+    const remaining=Math.max(0,30-daysSince);
+    const pct=Math.min(100,(daysSince/30)*100);
+    el.innerHTML=`<div class="arc-banner">
+      <div class="arc-banner-eyebrow">✦ The Prologue ✦</div>
+      <div class="arc-banner-title">Your Legend Stirs</div>
+      <div class="arc-banner-desc">Explore your realms. In ${remaining} day${remaining===1?'':'s'}, your first Seasonal Arc will be assigned.</div>
+      <div class="arc-banner-progress">
+        <div class="arc-banner-prog-lbl"><span>Day ${daysSince}</span><span>Day 30</span></div>
+        <div class="arc-banner-prog-track"><div class="arc-banner-prog-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const active=S.arcs&&S.arcs.find(a=>!a.completed);
+  if(!active){
+    if(S.arcs&&S.arcs.length>=4){
+      el.innerHTML=`<div class="arc-banner"><div class="arc-banner-eyebrow">✦ The Legend Complete ✦</div><div class="arc-banner-title">All Four Arcs Mastered</div><div class="arc-banner-desc">You have walked every chapter. Your legend is written across all realms.</div></div>`;
+    }
+    return;
+  }
+
+  const weak=REALMS.find(r=>r.id===active.weakRealm);
+  const strong=REALMS.find(r=>r.id===active.strongRealm);
+  const daysIn=daysBetween(active.startDate,todayStr());
+  const pct=Math.min(100,(daysIn/90)*100);
+  const daysLeft=Math.max(0,daysBetween(todayStr(),active.endDate));
+  const arcNum=(S.arcs.indexOf(active)+1);
+
+  el.innerHTML=`<div class="arc-banner">
+    <div class="arc-banner-eyebrow">✦ Arc ${arcNum} of 4 — ${daysLeft} days remaining ✦</div>
+    <div class="arc-banner-title">${active.name}</div>
+    <div class="arc-banner-desc">${active.flavour}</div>
+    <div class="arc-banner-realms">
+      <div class="arc-banner-realm"><span style="color:${weak?.color}">${weak?.icon} ${weak?.name}</span><span style="font-size:0.7rem;color:var(--pmuted);">growth edge</span></div>
+      <div class="arc-banner-realm"><span style="color:${strong?.color}">${strong?.icon} ${strong?.name}</span><span style="font-size:0.7rem;color:var(--pmuted);">anchor</span></div>
+    </div>
+    <div class="arc-banner-progress">
+      <div class="arc-banner-prog-lbl"><span>Day ${daysIn}</span><span>Day 90</span></div>
+      <div class="arc-banner-prog-track"><div class="arc-banner-prog-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="arc-banner-reward">Complete this arc to unlock: <strong style="color:var(--gold);">${ARC_TITLES.find(t=>t.id===active.reward)?.name||''}</strong> + Level cap +5</div>
+  </div>`;
+}
+
+function renderArcsPage(){
+  const el=document.getElementById('arcsPageContent');
+  if(!el)return;
+  let html='';
+
+  // Prologue card
+  if(!S.arcPrologueDone){
+    const start=S.firstBootDate||todayStr();
+    const daysSince=daysBetween(start,todayStr());
+    const remaining=Math.max(0,30-daysSince);
+    html+=`<div class="arc-banner"><div class="arc-banner-eyebrow">✦ Current Phase ✦</div><div class="arc-banner-title">The Prologue</div><div class="arc-banner-desc">The arc system is learning who you are. Keep exploring your realms. Your first arc will be assigned in ${remaining} day${remaining===1?'':'s'}.</div></div>`;
+  }
+
+  // All arcs
+  (S.arcs||[]).forEach((arc,i)=>{
+    const weak=REALMS.find(r=>r.id===arc.weakRealm);
+    const strong=REALMS.find(r=>r.id===arc.strongRealm);
+    const daysIn=daysBetween(arc.startDate,todayStr());
+    const pct=Math.min(100,(daysIn/90)*100);
+    const daysLeft=Math.max(0,daysBetween(todayStr(),arc.endDate));
+    const status=arc.completed?'✦ Complete':'Active';
+    html+=`<div class="arc-banner" style="${arc.completed?'opacity:0.6;':''}">
+      <div class="arc-banner-eyebrow">Arc ${i+1} of 4 — ${status}</div>
+      <div class="arc-banner-title">${arc.name}</div>
+      <div class="arc-banner-desc">${arc.flavour}</div>
+      <div class="arc-banner-realms">
+        <div class="arc-banner-realm"><span style="color:${weak?.color}">${weak?.icon} ${weak?.name}</span><span style="font-size:0.7rem;color:var(--pmuted);">growth edge</span></div>
+        <div class="arc-banner-realm"><span style="color:${strong?.color}">${strong?.icon} ${strong?.name}</span><span style="font-size:0.7rem;color:var(--pmuted);">anchor</span></div>
+      </div>
+      ${!arc.completed?`<div class="arc-banner-progress"><div class="arc-banner-prog-lbl"><span>Day ${daysIn}</span><span>${daysLeft} days left</span></div><div class="arc-banner-prog-track"><div class="arc-banner-prog-fill" style="width:${pct}%"></div></div></div>`:''}
+      <div class="arc-banner-reward">${arc.completed?'✦ Title unlocked: '+ARC_TITLES.find(t=>t.id===arc.reward)?.name:'Reward: '+ARC_TITLES.find(t=>t.id===arc.reward)?.name+' + Level cap +5'}</div>
+    </div>`;
+  });
+
+  if(!html)html='<div style="color:var(--pmuted);font-style:italic;text-align:center;padding:20px;">Your arcs will appear here once The Prologue is complete.</div>';
+  el.innerHTML=html;
+}
+
 function checkMemoryFragment(){
   const today=todayStr();
   if(S.lastMemoryDate===today)return;
@@ -1515,6 +1775,8 @@ load();seed();spawnParticles();if(S.particles===false)document.getElementById('p
 // Check first boot after render so app is ready
 setTimeout(checkFirstBoot,100);
 setTimeout(checkMemoryFragment,2500);
+setTimeout(checkPrologue,1500);
+setTimeout(checkArcCompletion,1000);
 </script>
 </body>
 </html>
