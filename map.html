@@ -993,12 +993,13 @@ function spawnStars(){
 
 // ── FOG SYSTEM ──────────────────────────────────────────────────────────
 const FOG_ZONES = [
-  { id: 'fog-forests',    top:'71%',  height:'14%', unlocked: ()=> S?.arcPrologueDone },
+  { id: 'fog-forests',    top:'71%',  height:'14%', unlocked: ()=> !!(S?.arcPrologueDone || (S?.arcs||[]).filter(a=>a.completed).length >= 1) },
   { id: 'fog-awakening',  top:'57%',  height:'14%', unlocked: ()=> (S?.arcs||[]).filter(a=>a.completed).length >= 1 },
   { id: 'fog-crucible',   top:'43%',  height:'14%', unlocked: ()=> (S?.arcs||[]).filter(a=>a.completed).length >= 2 },
   { id: 'fog-reckoning',  top:'29%',  height:'14%', unlocked: ()=> (S?.arcs||[]).filter(a=>a.completed).length >= 3 },
   { id: 'fog-ascension',  top:'15%',  height:'14%', unlocked: ()=> (S?.arcs||[]).filter(a=>a.completed).length >= 4 },
   { id: 'fog-beyond',     top:'0%',   height:'18%', unlocked: ()=> levelFromXp(totalXp()) >= 50, deep: true },
+  // New Vale is NEVER fogged — always lit, no entry for it here
 ];
 
 function buildFog(){
@@ -1030,11 +1031,12 @@ function buildFog(){
 // ── UPDATE LABELS FOR FOG STATE ──────────────────────────────────────────
 function updateLabels(){
   const completedArcs = (S?.arcs||[]).filter(a=>a.completed).length;
-  const prologueDone = S?.arcPrologueDone;
+  const prologueDone = !!(S?.arcPrologueDone || completedArcs >= 1);
+  const prologueStarted = !!(S?.prologueDay1Shown || prologueDone);
   const lvl = levelFromXp(totalXp());
 
   const fogStates = {
-    forests:    !prologueDone,
+    forests:    !prologueStarted,
     awakening:  completedArcs < 1,
     crucible:   completedArcs < 2,
     reckoning:  completedArcs < 3,
@@ -1101,6 +1103,17 @@ buildFog();
 updateLabels();
 positionMarker();
 updateHeader();
+
+// If no save data, show a gentle prompt
+if(!S){
+  const vale = document.getElementById('label-vale');
+  if(vale){
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:0.72rem;color:rgba(240,192,80,0.5);margin-top:6px;font-style:italic;font-family:Crimson Pro,serif;';
+    hint.textContent = 'Begin your legend in Lorekeeper to unlock the world';
+    vale.appendChild(hint);
+  }
+}
 
 // Fade in map gracefully
 document.querySelector('.map-outer').style.opacity = '0';
